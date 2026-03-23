@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Jay's Boss Battle</title>
+  <style>
+    :root {
+      --bg: #0f0f23;
+      --surface: #1a1a3e;
+      --card: #252550;
+      --border: #3a3a6e;
+      --primary: #6c63ff;
+      --accent: #ffd700;
+      --success: #4ade80;
+      --danger: #f87171;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .screen { display: none; padding: 20px 16px; min-height: 100vh; overflow-y: auto; padding-top: max(env(safe-area-inset-top,0px),20px); padding-bottom: 40px; }
+    .screen.active { display: block; }
+
+    /* ── TITLE SCREEN ── */
+    .title-wrap {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 100vh; text-align: center; padding: 20px;
+    }
+    .title-boss { font-size: 100px; animation: float 3s ease-in-out infinite; }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+    .title-text { font-size: 28px; font-weight: 800; margin: 12px 0 4px; }
+    .title-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 32px; }
+
+    /* ── BOSS SELECT ── */
+    .boss-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+    .boss-card {
+      background: var(--card); border: 2px solid var(--border);
+      border-radius: 16px; padding: 16px; text-align: center;
+      cursor: pointer; transition: border-color 0.2s, transform 0.1s;
+    }
+    .boss-card:active { transform: scale(0.97); }
+    .boss-card.selected { border-color: var(--danger); background: rgba(248,113,113,0.1); }
+    .boss-emoji { font-size: 44px; margin-bottom: 6px; }
+    .boss-name { font-size: 14px; font-weight: 700; }
+    .boss-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── BATTLE SCREEN ── */
+    .hp-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .hp-label { font-size: 12px; font-weight: 700; width: 40px; flex-shrink: 0; }
+    .hp-bar-bg { flex: 1; background: var(--border); border-radius: 100px; height: 14px; overflow: hidden; }
+    .hp-bar-fill { height: 100%; border-radius: 100px; transition: width 0.5s ease; }
+    .hp-boss-fill { background: linear-gradient(90deg, var(--danger), #ff6b35); }
+    .hp-jay-fill  { background: linear-gradient(90deg, var(--success), #22d3ee); }
+    .hp-num { font-size: 13px; font-weight: 700; width: 50px; text-align: right; flex-shrink: 0; }
+
+    .boss-area {
+      text-align: center; padding: 20px 0;
+      position: relative;
+    }
+    .boss-sprite {
+      font-size: 80px;
+      display: inline-block;
+      transition: transform 0.1s;
+    }
+    .boss-sprite.hit { animation: boss-hit 0.4s; }
+    @keyframes boss-hit {
+      0%{transform:translateX(0)}
+      20%{transform:translateX(-12px) scale(0.95)}
+      40%{transform:translateX(12px)}
+      60%{transform:translateX(-8px)}
+      80%{transform:translateX(8px)}
+      100%{transform:translateX(0)}
+    }
+    .boss-sprite.dead { animation: boss-dead 0.6s forwards; }
+    @keyframes boss-dead { 0%{transform:scale(1);opacity:1} 100%{transform:scale(0) rotate(180deg);opacity:0} }
+
+    .diff-badge {
+      display: inline-block;
+      padding: 3px 12px; border-radius: 100px;
+      font-size: 12px; font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .diff-easy   { background: rgba(74,222,128,0.2); color: var(--success); border: 1px solid var(--success); }
+    .diff-medium { background: rgba(251,191,36,0.2); color: #fbbf24; border: 1px solid #fbbf24; }
+    .diff-hard   { background: rgba(248,113,113,0.2); color: var(--danger); border: 1px solid var(--danger); }
+
+    .question-card {
+      background: var(--card); border-radius: 16px; padding: 20px;
+      margin-bottom: 16px; border: 1px solid var(--border);
+    }
+    .question-num { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+    .question-text { font-size: 17px; font-weight: 600; line-height: 1.5; }
+
+    .choice-btn {
+      display: block; width: 100%;
+      background: var(--surface); border: 2px solid var(--border);
+      border-radius: 12px; padding: 14px 16px;
+      font-size: 15px; color: var(--text);
+      text-align: left; cursor: pointer;
+      margin-bottom: 10px;
+      transition: border-color 0.15s, background 0.15s, transform 0.1s;
+    }
+    .choice-btn:active { transform: scale(0.98); }
+    .choice-btn.correct { border-color: var(--success); background: rgba(74,222,128,0.15); color: var(--success); }
+    .choice-btn.wrong   { border-color: var(--danger);  background: rgba(248,113,113,0.15); color: var(--danger); }
+    .choice-btn:disabled { cursor: default; }
+
+    /* Damage float */
+    .damage-float {
+      position: fixed; font-size: 28px; font-weight: 800;
+      pointer-events: none; z-index: 999;
+      animation: dmg-float 1.2s ease forwards;
+    }
+    @keyframes dmg-float {
+      0%  { opacity:1; transform: translateY(0) scale(1.2); }
+      100%{ opacity:0; transform: translateY(-80px) scale(0.8); }
+    }
+
+    /* Streak bar */
+    .streak-bar {
+      display: flex; gap: 6px; justify-content: center; margin-bottom: 16px;
+    }
+    .streak-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--border); transition: background 0.2s;
+    }
+    .streak-dot.filled { background: var(--accent); }
+
+    /* ── RESULT SCREEN ── */
+    .result-wrap { text-align: center; padding: 20px; }
+    .result-emoji { font-size: 80px; margin-bottom: 16px; }
+    .result-title { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+    .result-sub { font-size: 15px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6; }
+    .result-xp { font-size: 52px; font-weight: 800; color: var(--accent); margin-bottom: 4px; }
+    .result-xp-label { font-size: 14px; color: var(--text-muted); margin-bottom: 32px; }
+    .score-row { display: flex; justify-content: space-around; margin-bottom: 24px; }
+    .score-item { text-align: center; }
+    .score-val { font-size: 32px; font-weight: 800; color: var(--accent); }
+    .score-label { font-size: 12px; color: var(--text-muted); }
+
+    /* Buttons */
+    .btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 14px 24px; border-radius: 12px; border: none;
+      font-size: 16px; font-weight: 600; cursor: pointer;
+      width: 100%; transition: transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-danger  { background: var(--danger); color: white; }
+    .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text); }
+    .btn-accent  { background: var(--accent); color: #0f0f23; }
+
+    .section-title { font-size: 22px; font-weight: 800; margin-bottom: 20px; }
+    .card { background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); }
+
+    /* Notification toast */
+    .toast {
+      position: fixed; top: 60px; left: 50%; transform: translateX(-50%) translateY(-20px);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 100px; padding: 8px 20px;
+      font-size: 14px; font-weight: 600;
+      opacity: 0; transition: all 0.3s;
+      z-index: 998; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════
+     TITLE SCREEN
+═══════════════════════════════════ -->
+<div class="screen active" id="screen-title">
+  <div class="title-wrap">
+    <div class="title-boss" id="title-boss-emoji">👹</div>
+    <div class="title-text">주간 보스 배틀</div>
+    <div class="title-sub">Nate the Great 주간 복습</div>
+    <div style="background:var(--card);border-radius:16px;padding:16px;margin-bottom:28px;width:100%;max-width:340px;">
+      <div style="font-size:13px;color:var(--text-muted);text-align:left;line-height:1.8;">
+        ⚔️ 문제를 맞히면 보스에게 데미지<br>
+        ❤️ 틀리면 Jay HP 감소<br>
+        📈 연속 정답 2개 → 난이도 UP<br>
+        💡 틀려도 정답 바로 알려줌
+      </div>
+    </div>
+    <button class="btn btn-danger" onclick="showBossSelect()" style="max-width:340px;">⚔️ 보스 선택하기</button>
+    <button class="btn btn-outline" onclick="goHome()" style="max-width:340px;margin-top:10px;">🏠 홈으로</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     BOSS SELECT SCREEN
+═══════════════════════════════════ -->
+<div class="screen" id="screen-boss-select">
+  <div class="section-title">👹 보스 선택</div>
+  <div class="boss-grid" id="boss-grid"></div>
+  <button class="btn btn-danger" id="start-btn" onclick="startBattle()" disabled>⚔️ 배틀 시작!</button>
+  <button class="btn btn-outline" onclick="showScreen('screen-title')" style="margin-top:10px;">← 뒤로</button>
+</div>
+
+<!-- ═══════════════════════════════════
+     BATTLE SCREEN
+═══════════════════════════════════ -->
+<div class="screen" id="screen-battle">
+  <!-- HP Bars -->
+  <div class="card" style="padding:16px;margin-bottom:12px;">
+    <div class="hp-row">
+      <div class="hp-label" style="color:var(--danger)">👹 보스</div>
+      <div class="hp-bar-bg"><div class="hp-bar-fill hp-boss-fill" id="boss-hp-bar" style="width:100%"></div></div>
+      <div class="hp-num" id="boss-hp-num">150</div>
+    </div>
+    <div class="hp-row">
+      <div class="hp-label" style="color:var(--success)">💙 Jay</div>
+      <div class="hp-bar-bg"><div class="hp-bar-fill hp-jay-fill" id="jay-hp-bar" style="width:100%"></div></div>
+      <div class="hp-num" id="jay-hp-num">60</div>
+    </div>
+  </div>
+
+  <!-- Boss sprite -->
+  <div class="boss-area">
+    <div class="boss-sprite" id="boss-sprite">👹</div>
+    <div style="margin-top:8px;font-size:13px;font-weight:700;" id="boss-battle-name">보스</div>
+  </div>
+
+  <!-- Streak & Difficulty -->
+  <div style="text-align:center;margin-bottom:8px;">
+    <div class="diff-badge diff-easy" id="diff-badge">🌱 EASY</div>
+  </div>
+  <div class="streak-bar" id="streak-bar">
+    <div class="streak-dot" id="s0"></div>
+    <div class="streak-dot" id="s1"></div>
+  </div>
+
+  <!-- Question -->
+  <div class="question-card">
+    <div class="question-num" id="q-num">문제 1 / 10</div>
+    <div class="question-text" id="q-text">Loading...</div>
+  </div>
+
+  <!-- Choices -->
+  <div id="choices-wrap"></div>
+
+  <!-- Next btn (hidden until answer) -->
+  <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()" style="display:none;margin-top:4px;">
+    다음 문제 →
+  </button>
+</div>
+
+<!-- ═══════════════════════════════════
+     RESULT SCREEN
+═══════════════════════════════════ -->
+<div class="screen" id="screen-result">
+  <div class="result-wrap">
+    <div class="result-emoji" id="result-emoji">🏆</div>
+    <div class="result-title" id="result-title">보스 처치!</div>
+    <div class="result-sub" id="result-sub">대단해, Jay!</div>
+
+    <div class="score-row">
+      <div class="score-item">
+        <div class="score-val" id="res-correct">0</div>
+        <div class="score-label">정답</div>
+      </div>
+      <div class="score-item">
+        <div class="score-val" id="res-wrong">0</div>
+        <div class="score-label">오답</div>
+      </div>
+      <div class="score-item">
+        <div class="score-val" id="res-max-diff">Easy</div>
+        <div class="score-label">최고 난이도</div>
+      </div>
+    </div>
+
+    <div class="result-xp" id="result-xp">+80 XP</div>
+    <div class="result-xp-label">획득한 XP (메인 앱에서 확인)</div>
+
+    <!-- Wrong answers review -->
+    <div id="wrong-review" style="text-align:left;margin-bottom:24px;"></div>
+
+    <button class="btn btn-danger" onclick="showBossSelect()" style="margin-bottom:10px;">🔄 다시 도전!</button>
+    <button class="btn btn-outline" onclick="goHome()">🏠 홈으로</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// QUESTION BANK  (Nate the Great Series)
+// ══════════════════════════════════════════
+const QUESTIONS = {
+  easy: [
+    { q: "What is the name of the main character?",
+      choices: ["Nate the Great", "Sam the Super", "Jake the Brave", "Max the Mighty"], ans: 0 },
+    { q: "What food does Nate love most?",
+      choices: ["Pizza", "Pancakes", "Hot dogs", "Sandwiches"], ans: 1 },
+    { q: "What is Nate's dog's name?",
+      choices: ["Buddy", "Rex", "Sludge", "Biscuit"], ans: 2 },
+    { q: "What does Nate do in the stories?",
+      choices: ["He plays sports", "He goes on trips", "He solves mysteries", "He builds things"], ans: 2 },
+    { q: "Who is Annie?",
+      choices: ["Nate's sister", "Nate's teacher", "Nate's neighbor's mom", "Nate's friend"], ans: 3 },
+    { q: "What does Nate always write before leaving home?",
+      choices: ["A shopping list", "A note to his mother", "A diary entry", "A letter to Annie"], ans: 1 },
+    { q: "What does a detective do?",
+      choices: ["Fixes cars", "Cooks food", "Teaches school", "Solves mysteries"], ans: 3 },
+    { q: "What animal is Sludge?",
+      choices: ["A cat", "A rabbit", "A dog", "A hamster"], ans: 2 },
+    { q: "What is Nate famous for?",
+      choices: ["Being the tallest", "Being great at solving cases", "Being the fastest runner", "Being the best cook"], ans: 1 },
+    { q: "When Nate has a mystery to solve, what does he do FIRST?",
+      choices: ["He goes to sleep", "He calls the police", "He starts looking for clues", "He watches TV"], ans: 2 },
+    { q: "How does Nate usually begin telling his story?",
+      choices: ["My name is Nate the Great", "Once upon a time...", "Hello, my name is Nathan", "Dear diary..."], ans: 0 },
+    { q: "What word describes Nate's personality best?",
+      choices: ["Lazy", "Silly", "Determined", "Careless"], ans: 2 },
+  ],
+  medium: [
+    { q: "Why does Nate leave notes for his mother when he goes out?",
+      choices: ["His mother is very forgetful", "So she knows where he is and won't worry", "His teacher told him to", "He wants to practice writing"], ans: 1 },
+    { q: "How does Sludge help Nate solve mysteries?",
+      choices: ["Sludge talks to other dogs", "Sludge writes the clues down", "Sludge uses his nose to find things", "Sludge draws pictures"], ans: 2 },
+    { q: "Why does Nate ask his friends questions when he has a case?",
+      choices: ["He is bored and wants to talk", "People can give him important clues", "He wants to show off", "He doesn't know what to do"], ans: 1 },
+    { q: "What makes Nate different from other kids?",
+      choices: ["He is the tallest kid", "He is very good at sports", "He thinks carefully and solves problems", "He has the most toys"], ans: 2 },
+    { q: "Why do people come to Nate when they have a problem?",
+      choices: ["Because he is the oldest", "Because he always has pancakes", "Because he is good at finding answers", "Because he lives nearby"], ans: 2 },
+    { q: "What can we tell about Nate from his notes to his mother?",
+      choices: ["He is irresponsible", "He is kind and thinks about others' feelings", "He doesn't like his mother", "He can't remember things"], ans: 1 },
+    { q: "What does it mean when Nate says he is 'on a case'?",
+      choices: ["He is carrying a box", "He is reading a book", "He is working on solving a mystery", "He is going to school"], ans: 2 },
+    { q: "What does Nate do when someone loses something?",
+      choices: ["He buys a new one for them", "He looks for clues to find it", "He tells them to look harder", "He calls the police"], ans: 1 },
+    { q: "How does Nate feel about his job as a detective?",
+      choices: ["He thinks it's boring", "He hates getting questions", "He is proud and takes it seriously", "He wants to do something else"], ans: 2 },
+    { q: "What does Nate usually do after he gathers all the clues?",
+      choices: ["He goes home to eat pancakes", "He thinks carefully and figures out the answer", "He asks a grown-up for help", "He gives up on the case"], ans: 1 },
+  ],
+  hard: [
+    { q: "What does the word 'clue' mean in a mystery story?",
+      choices: ["A type of food", "Something that helps solve the mystery", "A friendly animal", "A kind of color"], ans: 1 },
+    { q: "What does the word 'case' mean when Nate says 'I have a case'?",
+      choices: ["A box or bag", "A school project", "A mystery to solve", "A trip he takes"], ans: 2 },
+    { q: "What can we INFER about Nate from the way he always eats pancakes?",
+      choices: ["He has no other food at home", "He has strong habits and likes routine", "He doesn't know how to cook", "His mother forces him to eat them"], ans: 1 },
+    { q: "Why is it important for a detective to ask many questions?",
+      choices: ["To show how smart they are", "To waste time", "Because each answer can lead to a new clue", "To confuse people"], ans: 2 },
+    { q: "What does the word 'investigate' most likely mean?",
+      choices: ["To eat a big meal", "To carefully look into something to find the truth", "To make a new friend", "To take a long nap"], ans: 1 },
+    { q: "If someone says Nate is 'thorough,' what do they mean?",
+      choices: ["Nate is very tall", "Nate is careful and checks everything", "Nate is very fast", "Nate is funny"], ans: 1 },
+    { q: "What can we conclude about Nate from the fact that he always keeps his promises to solve cases?",
+      choices: ["He is not busy", "He is reliable and takes his responsibilities seriously", "He has too much free time", "He doesn't know how to say no"], ans: 1 },
+    { q: "Why does Nate sometimes say 'I, Nate the Great, knew the answer'?",
+      choices: ["He is being rude to others", "He is expressing confidence in his detective skills", "He is making fun of himself", "He wants people to be afraid of him"], ans: 1 },
+    { q: "What does the word 'suspect' mean in a mystery story?",
+      choices: ["A good friend who helps you", "Someone who might have done something wrong", "A kind of food", "A funny joke"], ans: 1 },
+    { q: "What would be the BEST way to describe Nate as a detective?",
+      choices: ["Lucky but careless", "Smart, observant, and persistent", "Fast but forgetful", "Friendly but lazy"], ans: 1 },
+  ]
+};
+
+// ══════════════════════════════════════════
+// BOSSES
+// ══════════════════════════════════════════
+const BOSSES = [
+  { id:0, emoji:'🧙', name:'Mystery Wizard',  desc:'수수께끼를 내는 마법사', hp:150, atk:8  },
+  { id:1, emoji:'🐉', name:'Word Dragon',     desc:'단어를 먹는 드래곤',     hp:180, atk:10 },
+  { id:2, emoji:'🦅', name:'Eagle Detective', desc:'모든 것을 지켜보는 독수리', hp:200, atk:12 },
+  { id:3, emoji:'🤖', name:'Quiz Robot',      desc:'문제를 끝없이 내는 로봇', hp:160, atk:9  },
+  { id:4, emoji:'👾', name:'Story Monster',   desc:'이야기를 빼앗는 몬스터',  hp:170, atk:11 },
+];
+
+// ══════════════════════════════════════════
+// GAME STATE
+// ══════════════════════════════════════════
+let selectedBoss = null;
+let bossHp = 150, bossHpMax = 150;
+let jayHp  = 60,  jayHpMax  = 60;
+let currentLevel = 0;  // 0=easy 1=medium 2=hard
+let correctStreak = 0;
+let qIndex = 0;
+let totalQuestions = 10;
+let correctCount = 0;
+let wrongCount = 0;
+let maxLevelReached = 0;
+let usedQ = { easy:[], medium:[], hard:[] };
+let currentQ = null;
+let wrongLog = [];
+let answered = false;
+
+// ══════════════════════════════════════════
+// SCREEN UTILS
+// ══════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function goHome() { window.location.href = 'index.html'; }
+function showBossSelect() {
+  renderBossGrid();
+  showScreen('screen-boss-select');
+  document.getElementById('start-btn').disabled = true;
+  selectedBoss = null;
+}
+
+function renderBossGrid() {
+  document.getElementById('boss-grid').innerHTML = BOSSES.map(b=>`
+    <div class="boss-card" id="boss-card-${b.id}" onclick="selectBoss(${b.id})">
+      <div class="boss-emoji">${b.emoji}</div>
+      <div class="boss-name">${b.name}</div>
+      <div class="boss-desc">${b.desc}</div>
+      <div style="margin-top:6px;font-size:11px;color:var(--danger)">HP ${b.hp} / ATK ${b.atk}</div>
+    </div>`).join('');
+}
+function selectBoss(id) {
+  document.querySelectorAll('.boss-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('boss-card-'+id).classList.add('selected');
+  selectedBoss = BOSSES[id];
+  document.getElementById('start-btn').disabled = false;
+}
+
+// ══════════════════════════════════════════
+// BATTLE INIT
+// ══════════════════════════════════════════
+function startBattle() {
+  if (!selectedBoss) return;
+  bossHp = bossHpMax = selectedBoss.hp;
+  jayHp  = jayHpMax  = 60;
+  currentLevel = 0;
+  correctStreak = 0;
+  qIndex = 0;
+  correctCount = 0;
+  wrongCount = 0;
+  maxLevelReached = 0;
+  usedQ = { easy:[], medium:[], hard:[] };
+  wrongLog = [];
+  answered = false;
+
+  document.getElementById('boss-sprite').textContent = selectedBoss.emoji;
+  document.getElementById('boss-sprite').className = 'boss-sprite';
+  document.getElementById('boss-battle-name').textContent = selectedBoss.name;
+  updateHpBars();
+  updateStreakBar();
+  showScreen('screen-battle');
+  loadQuestion();
+}
+
+// ══════════════════════════════════════════
+// QUESTION ENGINE
+// ══════════════════════════════════════════
+function getNextQuestion() {
+  const lvlKey = ['easy','medium','hard'][currentLevel];
+  const pool = QUESTIONS[lvlKey];
+  const available = pool.filter((_,i) => !usedQ[lvlKey].includes(i));
+  if (available.length === 0) { usedQ[lvlKey] = []; return getNextQuestion(); }
+  const pick = Math.floor(Math.random() * available.length);
+  const realIdx = pool.indexOf(available[pick]);
+  usedQ[lvlKey].push(realIdx);
+  return { ...available[pick], level: currentLevel };
+}
+
+function loadQuestion() {
+  answered = false;
+  currentQ = getNextQuestion();
+  document.getElementById('q-num').textContent = `문제 ${qIndex+1} / ${totalQuestions}`;
+  document.getElementById('q-text').textContent = currentQ.q;
+  document.getElementById('next-btn').style.display = 'none';
+  updateDiffBadge();
+  updateStreakBar();
+
+  const wrap = document.getElementById('choices-wrap');
+  wrap.innerHTML = currentQ.choices.map((c,i)=>`
+    <button class="choice-btn" id="choice-${i}" onclick="answer(${i})">${String.fromCharCode(65+i)}. ${c}</button>
+  `).join('');
+}
+
+// ══════════════════════════════════════════
+// ANSWER HANDLING
+// ══════════════════════════════════════════
+function answer(idx) {
+  if (answered) return;
+  answered = true;
+
+  // Disable all buttons
+  currentQ.choices.forEach((_,i)=>{
+    const btn = document.getElementById('choice-'+i);
+    btn.disabled = true;
+    if (i === currentQ.ans) btn.classList.add('correct');
+  });
+
+  const correct = idx === currentQ.ans;
+
+  if (correct) {
+    document.getElementById('choice-'+idx).classList.add('correct');
+    correctCount++;
+    correctStreak++;
+    const dmg = [15, 22, 35][currentLevel];
+    bossHp = Math.max(0, bossHp - dmg);
+    spawnDamage('-'+dmg, 'var(--success)', true);
+    document.getElementById('boss-sprite').classList.remove('hit');
+    void document.getElementById('boss-sprite').offsetWidth;
+    document.getElementById('boss-sprite').classList.add('hit');
+    if (currentLevel > maxLevelReached) maxLevelReached = currentLevel;
+    // Adaptive UP
+    if (correctStreak >= 2 && currentLevel < 2) {
+      currentLevel++;
+      correctStreak = 0;
+      setTimeout(()=>showToast(['📈 난이도 UP! Medium!','📈 난이도 UP! Hard!'][currentLevel-1]), 600);
+    }
+  } else {
+    document.getElementById('choice-'+idx).classList.add('wrong');
+    wrongCount++;
+    correctStreak = 0;
+    const dmg = selectedBoss.atk;
+    jayHp = Math.max(0, jayHp - dmg);
+    spawnDamage('-'+dmg+'HP', 'var(--danger)', false);
+    wrongLog.push({ q: currentQ.q, correct: currentQ.choices[currentQ.ans] });
+    // Adaptive DOWN
+    if (currentLevel > 0) {
+      currentLevel--;
+      setTimeout(()=>showToast('📉 난이도 조정됨'), 600);
+    }
+  }
+
+  updateHpBars();
+  updateStreakBar();
+  document.getElementById('next-btn').style.display = 'block';
+
+  qIndex++;
+
+  // Check end conditions
+  if (bossHp <= 0) {
+    setTimeout(()=>{
+      document.getElementById('boss-sprite').classList.add('dead');
+      setTimeout(showResult, 700);
+    }, 500);
+    return;
+  }
+  if (jayHp <= 0) {
+    setTimeout(showResult, 600);
+    return;
+  }
+  if (qIndex >= totalQuestions) {
+    setTimeout(showResult, 600);
+  }
+}
+
+function nextQuestion() {
+  if (qIndex >= totalQuestions || bossHp <= 0 || jayHp <= 0) { showResult(); return; }
+  loadQuestion();
+}
+
+// ══════════════════════════════════════════
+// UI UPDATES
+// ══════════════════════════════════════════
+function updateHpBars() {
+  document.getElementById('boss-hp-bar').style.width = (bossHp/bossHpMax*100)+'%';
+  document.getElementById('jay-hp-bar').style.width  = (jayHp/jayHpMax*100)+'%';
+  document.getElementById('boss-hp-num').textContent = bossHp;
+  document.getElementById('jay-hp-num').textContent  = jayHp;
+}
+function updateDiffBadge() {
+  const badge = document.getElementById('diff-badge');
+  const data = [
+    ['diff-easy','🌱 EASY'],
+    ['diff-medium','⚡ MEDIUM'],
+    ['diff-hard','🔥 HARD']
+  ][currentLevel];
+  badge.className = 'diff-badge '+data[0];
+  badge.textContent = data[1];
+}
+function updateStreakBar() {
+  for(let i=0;i<2;i++){
+    document.getElementById('s'+i).className='streak-dot'+(i<correctStreak?' filled':'');
+  }
+}
+function spawnDamage(text, color, isBoss) {
+  const el = document.createElement('div');
+  el.className = 'damage-float';
+  el.textContent = text;
+  el.style.color = color;
+  el.style.left = isBoss ? '55%' : '35%';
+  el.style.top = isBoss ? '35%' : '55%';
+  el.style.fontSize = isBoss ? '32px' : '24px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 1300);
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+// ══════════════════════════════════════════
+// RESULT
+// ══════════════════════════════════════════
+function showResult() {
+  const win = bossHp <= 0;
+  const survive = jayHp > 0;
+  let xp = 0;
+  let emoji, title, sub;
+
+  if (win) {
+    xp = 100 + correctCount * 5 + maxLevelReached * 20;
+    emoji = '🏆'; title = '보스 처치!';
+    sub = `대단해, Jay! ${selectedBoss.name}을(를) 물리쳤어!\n${correctCount}개 맞히고 ${wrongCount}개 틀렸어.`;
+  } else if (!survive) {
+    xp = correctCount * 5;
+    emoji = '💪'; title = '아깝다!';
+    sub = `${correctCount}개나 맞혔어! 다음엔 보스를 꼭 처치하자!`;
+  } else {
+    xp = correctCount * 5 + (correctCount >= 7 ? 30 : 0);
+    emoji = correctCount >= 7 ? '⭐' : '😊';
+    title = correctCount >= 7 ? '훌륭해!' : '잘했어!';
+    sub = `10문제 완료! ${correctCount}개 정답!`;
+  }
+
+  // Save XP to main app state
+  try {
+    const s = JSON.parse(localStorage.getItem('jayState')||'{}');
+    s.xp = (s.xp||0) + xp;
+    s.todayXp = (s.todayXp||0) + xp;
+    localStorage.setItem('jayState', JSON.stringify(s));
+  } catch {}
+
+  document.getElementById('result-emoji').textContent = emoji;
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-sub').textContent = sub;
+  document.getElementById('result-xp').textContent = '+'+xp+' XP';
+  document.getElementById('res-correct').textContent = correctCount;
+  document.getElementById('res-wrong').textContent = wrongCount;
+  document.getElementById('res-max-diff').textContent = ['Easy','Medium','Hard'][maxLevelReached];
+
+  // Wrong answers review
+  const rev = document.getElementById('wrong-review');
+  if (wrongLog.length > 0) {
+    rev.innerHTML = `
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--text-muted)">✏️ 틀린 문제 복습</div>
+      ${wrongLog.map(w=>`
+        <div style="background:var(--card);border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid var(--border);">
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;">${w.q}</div>
+          <div style="font-size:14px;color:var(--success);font-weight:600;">✅ 정답: ${w.correct}</div>
+        </div>`).join('')}`;
+  } else {
+    rev.innerHTML = `<div style="text-align:center;font-size:14px;color:var(--success);margin-bottom:16px;">🎉 모든 문제를 맞혔어!</div>`;
+  }
+
+  showScreen('screen-result');
+}
+
+// ══════════════════════════════════════════
+// TITLE SCREEN ANIMATION
+// ══════════════════════════════════════════
+const titleEmojis = ['👹','🐉','🦅','🤖','👾'];
+let titleIdx = 0;
+setInterval(()=>{
+  titleIdx=(titleIdx+1)%titleEmojis.length;
+  document.getElementById('title-boss-emoji').textContent=titleEmojis[titleIdx];
+},2000);
+</script>
+</body>
+</html>
