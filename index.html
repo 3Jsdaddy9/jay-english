@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Jay's Quest">
+  <meta name="theme-color" content="#0f0f23">
+  <link rel="manifest" href="manifest.json">
+  <title>Jay's English Quest</title>
+  <style>
+    :root {
+      --bg: #0f0f23;
+      --surface: #1a1a3e;
+      --card: #252550;
+      --border: #3a3a6e;
+      --primary: #6c63ff;
+      --accent: #ffd700;
+      --success: #4ade80;
+      --danger: #f87171;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --nav-height: 70px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .screen {
+      display: none;
+      min-height: calc(100vh - var(--nav-height));
+      padding: 20px 16px;
+      padding-bottom: calc(var(--nav-height) + 30px);
+      padding-top: max(env(safe-area-inset-top, 0px), 20px);
+      overflow-y: auto;
+    }
+    .screen.active { display: block; }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: var(--nav-height);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+      z-index: 100;
+    }
+    .nav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 8px 0;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 10px;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .nav-btn .icon { font-size: 22px; }
+    .nav-btn.active { color: var(--primary); }
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+    }
+    .xp-bar-bg {
+      background: var(--border);
+      border-radius: 100px;
+      height: 12px;
+      overflow: hidden;
+    }
+    .xp-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: 100px;
+      transition: width 0.8s ease;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 24px;
+      border-radius: 12px;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+      width: 100%;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.5; cursor: default; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-success { background: var(--success); color: #0f0f23; }
+    .btn-accent { background: var(--accent); color: #0f0f23; }
+    .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text); }
+    .level-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 100px;
+      padding: 4px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      color: white;
+    }
+    .activity-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .activity-row:last-child { border-bottom: none; }
+    .activity-check {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .check-done { background: var(--success); color: #0f0f23; }
+    .check-pending { background: var(--border); color: var(--text-muted); }
+    /* Flashcard */
+    .flip-card-container { perspective: 1000px; height: 210px; margin-bottom: 24px; }
+    .flip-card {
+      width: 100%; height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s ease;
+      cursor: pointer;
+    }
+    .flip-card.flipped { transform: rotateY(180deg); }
+    .flip-card-front, .flip-card-back {
+      position: absolute;
+      width: 100%; height: 100%;
+      backface-visibility: hidden;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+    .flip-card-front { background: linear-gradient(135deg, var(--primary), #9c5fff); }
+    .flip-card-back { background: linear-gradient(135deg, #1e3a5f, #2d5986); transform: rotateY(180deg); }
+    .word-text { font-size: 34px; font-weight: 800; color: white; margin-bottom: 8px; }
+    .word-hint { font-size: 13px; color: rgba(255,255,255,0.65); }
+    .meaning-text { font-size: 26px; font-weight: 700; color: white; margin-bottom: 10px; }
+    .example-text { font-size: 13px; color: rgba(255,255,255,0.8); font-style: italic; line-height: 1.5; }
+    /* Timer */
+    .timer-display {
+      font-size: 72px;
+      font-weight: 800;
+      text-align: center;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -2px;
+      margin: 8px 0 20px;
+    }
+    .timer-ring { transform: rotate(-90deg); }
+    .timer-ring-bg { fill: none; stroke: var(--border); stroke-width: 8; }
+    .timer-ring-progress {
+      fill: none; stroke: var(--accent); stroke-width: 8;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear;
+    }
+    /* XP Popup */
+    .xp-popup {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 24px;
+      padding: 36px 48px;
+      text-align: center;
+      z-index: 1000;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .xp-popup.show { transform: translate(-50%, -50%) scale(1); }
+    .xp-popup-text { font-size: 52px; font-weight: 800; color: white; }
+    .xp-popup-sub { font-size: 18px; color: rgba(255,255,255,0.9); margin-top: 6px; }
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 999;
+      display: none;
+    }
+    .overlay.show { display: block; }
+    /* Mission */
+    .mission-card {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.1s;
+    }
+    .mission-card:active { transform: scale(0.98); }
+    .mission-card.selected { border-color: var(--primary); background: rgba(108,99,255,0.1); }
+    .mission-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .mission-xp { font-size: 13px; color: var(--accent); font-weight: 600; }
+    .mission-desc { font-size: 13px; color: var(--text-muted); margin-top: 6px; line-height: 1.5; }
+    /* Stats */
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .stat-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 20px 16px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+    .stat-value { font-size: 34px; font-weight: 800; color: var(--accent); }
+    .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    /* Calendar */
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .cal-day {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--border);
+      color: var(--text-muted);
+    }
+    .cal-day.done { background: var(--success); color: #0f0f23; }
+    .cal-day.today { border: 2px solid var(--primary); }
+    /* Mom Mode */
+    .mom-input {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-size: 15px;
+      width: 100%;
+      margin-bottom: 12px;
+      outline: none;
+    }
+    .mom-input:focus { border-color: var(--primary); }
+    .mom-label { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; display: block; }
+    .section-title {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .streak-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255,215,0,0.12);
+      border: 1px solid var(--accent);
+      border-radius: 100px;
+      padding: 4px 12px;
+      font-size: 13px;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .word-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: var(--surface);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      border: 1px solid var(--border);
+    }
+    .delete-btn { background: none; border: none; color: var(--danger); font-size: 18px; cursor: pointer; padding: 4px 8px; }
+    /* PIN */
+    .pin-screen {
+      display: none;
+      position: fixed; inset: 0;
+      background: var(--bg);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .pin-screen.show { display: flex; }
+    .pin-dots { display: flex; gap: 16px; }
+    .pin-dot {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      transition: background 0.15s;
+    }
+    .pin-dot.filled { background: var(--primary); }
+    .pin-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 280px; }
+    .pin-key {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.1s, transform 0.1s;
+    }
+    .pin-key:active { background: var(--primary); transform: scale(0.95); }
+    /* Animations */
+    @keyframes float-up {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-70px); }
+    }
+    .float-xp {
+      position: fixed;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--accent);
+      pointer-events: none;
+      animation: float-up 1.5s ease forwards;
+      z-index: 2000;
+    }
+    @keyframes levelup-bounce {
+      0%,100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+    .progress-text { text-align: center; font-size: 14px; color: var(--text-muted); margin-bottom: 16px; }
+    .ws-dots-row { display: flex; justify-content: center; gap: 8px; }
+  </style>
+</head>
+<body>
+
+<!-- PIN Screen -->
+<div class="pin-screen" id="pinScreen">
+  <div style="font-size:28px;font-weight:800;">🔑 엄마 모드</div>
+  <div style="font-size:14px;color:var(--text-muted)">PIN 4자리를 입력하세요</div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="dot0"></div>
+    <div class="pin-dot" id="dot1"></div>
+    <div class="pin-dot" id="dot2"></div>
+    <div class="pin-dot" id="dot3"></div>
+  </div>
+  <div class="pin-keypad">
+    <div class="pin-key" onclick="pinInput('1')">1</div>
+    <div class="pin-key" onclick="pinInput('2')">2</div>
+    <div class="pin-key" onclick="pinInput('3')">3</div>
+    <div class="pin-key" onclick="pinInput('4')">4</div>
+    <div class="pin-key" onclick="pinInput('5')">5</div>
+    <div class="pin-key" onclick="pinInput('6')">6</div>
+    <div class="pin-key" onclick="pinInput('7')">7</div>
+    <div class="pin-key" onclick="pinInput('8')">8</div>
+    <div class="pin-key" onclick="pinInput('9')">9</div>
+    <div class="pin-key" onclick="pinCancel()" style="font-size:14px;color:var(--text-muted)">취소</div>
+    <div class="pin-key" onclick="pinInput('0')">0</div>
+    <div class="pin-key" onclick="pinDelete()">⌫</div>
+  </div>
+</div>
+
+<!-- XP Overlay -->
+<div class="overlay" id="overlay" onclick="closeXpPopup()"></div>
+<div class="xp-popup" id="xpPopup">
+  <div class="xp-popup-text" id="xpPopupText">+25 XP</div>
+  <div class="xp-popup-sub" id="xpPopupSub">읽기 완료!</div>
+  <button class="btn btn-accent" style="margin-top:20px;width:auto;padding:12px 32px;" onclick="closeXpPopup()">👍 좋아!</button>
+</div>
+
+<!-- ===== HOME ===== -->
+<div class="screen active" id="screen-home">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+    <div>
+      <div style="font-size:13px;color:var(--text-muted);" id="greeting-text">안녕, Jay!</div>
+      <div style="font-size:26px;font-weight:800;">오늘도 퀘스트! ⚔️</div>
+    </div>
+    <div class="streak-badge">🔥 <span id="streak-count">0</span>일 연속</div>
+  </div>
+
+  <!-- Level + XP -->
+  <div class="card" style="background:linear-gradient(135deg,#1a1a3e,#252550);margin-bottom:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div class="level-badge" id="home-level-badge">⚔️ Lv.1 Beginner</div>
+      <div style="font-size:15px;color:var(--accent);font-weight:700;"><span id="home-xp">0</span> XP</div>
+    </div>
+    <div class="xp-bar-bg">
+      <div class="xp-bar-fill" id="home-xp-bar" style="width:0%"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--text-muted);">
+      <span>현재</span>
+      <span>다음 레벨: <span id="home-next-xp">200</span> XP</span>
+    </div>
+  </div>
+
+  <!-- Today quests -->
+  <div class="card">
+    <div style="font-size:16px;font-weight:700;margin-bottom:2px;">📋 오늘의 퀘스트</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;" id="today-book-info">Big Nate</div>
+
+    <div class="activity-row" onclick="navigate('wordscout')">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-size:24px;">⚔️</span>
+        <div>
+          <div style="font-weight:600;">Word Scout</div>
+          <div style="font-size:12px;color:var(--text-muted)">단어 미리 정찰 +20 XP</div>
+        </div>
+      </div>
+      <div class="activity-check check-pending" id="check-wordscout">○</div>
+    </div>
+    <div class="activity-row" onclick="navigate('reading')">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-size:24px;">📖</span>
+        <div>
+          <div style="font-weight:600;">읽기</div>
+          <div style="font-size:12px;color:var(--text-muted)">15분 타이머 +25 XP</div>
+        </div>
+      </div>
+      <div class="activity-check check-pending" id="check-reading">○</div>
+    </div>
+    <div class="activity-row" onclick="navigate('mission')">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-size:24px;">🎯</span>
+        <div>
+          <div style="font-weight:600;">미션 클리어</div>
+          <div style="font-size:12px;color:var(--text-muted)">특별 미션 +10~25 XP</div>
+        </div>
+      </div>
+      <div class="activity-check check-pending" id="check-mission">○</div>
+    </div>
+  </div>
+
+  <!-- Today XP -->
+  <div class="card" style="text-align:center;">
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px;">오늘 획득한 XP</div>
+    <div style="font-size:44px;font-weight:800;color:var(--accent);" id="today-xp-display">0</div>
+    <div style="font-size:12px;color:var(--text-muted)">최대 70 XP 획득 가능</div>
+  </div>
+</div>
+
+<!-- ===== WORD SCOUT ===== -->
+<div class="screen" id="screen-wordscout">
+  <div class="section-title">⚔️ Word Scout</div>
+
+  <div id="no-words-state" style="text-align:center;padding:60px 20px;">
+    <div style="font-size:64px;margin-bottom:16px;">😴</div>
+    <div style="font-size:18px;font-weight:700;margin-bottom:8px;">단어가 없어요</div>
+    <div style="font-size:14px;color:var(--text-muted)">엄마한테 단어 입력해달라고 말해줘!</div>
+  </div>
+
+  <div id="wordscout-active" style="display:none;">
+    <div class="progress-text">
+      <span id="ws-current">1</span> / <span id="ws-total">5</span> 단어
+    </div>
+    <div class="flip-card-container">
+      <div class="flip-card" id="flipCard" onclick="flipCard()">
+        <div class="flip-card-front">
+          <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:10px;">👆 탭해서 뜻 확인</div>
+          <div class="word-text" id="ws-word">word</div>
+          <div class="word-hint" id="ws-hint"></div>
+        </div>
+        <div class="flip-card-back">
+          <div class="meaning-text" id="ws-meaning">뜻</div>
+          <div class="example-text" id="ws-example"></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+      <button class="btn" style="background:var(--border);color:var(--text);" onclick="wsNext(false)">🤔 어려워요</button>
+      <button class="btn btn-success" onclick="wsNext(true)">✅ 알아요!</button>
+    </div>
+    <div class="ws-dots-row" id="ws-dots"></div>
+  </div>
+
+  <div id="wordscout-done" style="display:none;text-align:center;padding:40px 20px;">
+    <div style="font-size:64px;margin-bottom:16px;">🎉</div>
+    <div style="font-size:22px;font-weight:800;margin-bottom:8px;">Word Scout 완료!</div>
+    <div style="font-size:14px;color:var(--text-muted);margin-bottom:6px;">
+      <span id="ws-known-count">0</span>개 알고, <span id="ws-unknown-count">0</span>개 새로 배웠어요
+    </div>
+    <div style="font-size:14px;color:var(--accent);margin-bottom:32px;">이 단어들이 오늘 책에 나올 거야 👀</div>
+    <button class="btn btn-primary" onclick="navigate('reading')">📖 읽기 하러 가기</button>
+    <button class="btn btn-outline" style="margin-top:12px;" onclick="wsRestart()">🔄 다시 보기</button>
+  </div>
+</div>
+
+<!-- ===== READING ===== -->
+<div class="screen" id="screen-reading">
+  <div class="section-title">📖 읽기 타이머</div>
+
+  <div class="card" style="background:linear-gradient(135deg,#1a1a3e,#252550);">
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">오늘 읽을 책</div>
+    <div style="font-size:18px;font-weight:700;" id="reading-book-title">Big Nate</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-top:2px;" id="reading-chapter-info"></div>
+  </div>
+
+  <div style="display:flex;justify-content:center;">
+    <svg width="200" height="200" class="timer-ring">
+      <circle class="timer-ring-bg" cx="100" cy="100" r="88"/>
+      <circle class="timer-ring-progress" id="timerRingProgress" cx="100" cy="100" r="88"
+        stroke-dasharray="553" stroke-dashoffset="0"/>
+    </svg>
+  </div>
+  <div class="timer-display" id="timer-display">15:00</div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+    <button class="btn btn-primary" id="timer-start-btn" onclick="timerToggle()">▶ 시작</button>
+    <button class="btn btn-outline" onclick="timerReset()">↺ 초기화</button>
+  </div>
+
+  <button class="btn" style="background:rgba(248,113,113,0.12);color:var(--danger);border:1px solid var(--danger);margin-bottom:12px;" onclick="reportUnknownWord()">
+    ❓ 모르는 단어 나왔어요!
+  </button>
+
+  <button class="btn btn-success" id="reading-complete-btn" onclick="completeReading()" style="display:none;">
+    ✅ 읽기 완료! (+25 XP)
+  </button>
+
+  <div id="unknown-words-section" style="display:none;margin-top:8px;">
+    <div style="font-size:13px;font-weight:700;color:var(--text-muted);margin-bottom:8px;">📝 모른 단어 메모</div>
+    <div id="unknown-words-list"></div>
+  </div>
+</div>
+
+<!-- ===== MISSION ===== -->
+<div class="screen" id="screen-mission">
+  <div class="section-title">🎯 미션 클리어</div>
+
+  <div class="card" style="background:rgba(108,99,255,0.1);border-color:var(--primary);margin-bottom:20px;">
+    <div style="font-size:14px;color:var(--primary);font-weight:600;">💡 미션 안내</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">아래 미션 중 하나를 골라서 완료하면 XP 획득!</div>
+  </div>
+
+  <div id="mission-list"></div>
+  <div id="mission-complete-area" style="display:none;"></div>
+  <div id="mission-done-state" style="display:none;text-align:center;padding:40px 20px;">
+    <div style="font-size:64px;margin-bottom:16px;">🏆</div>
+    <div style="font-size:22px;font-weight:800;margin-bottom:8px;">오늘 퀘스트 완료!</div>
+    <div style="font-size:14px;color:var(--text-muted);margin-bottom:24px;">대단한 Jay! 내일도 도전해봐 💪</div>
+    <button class="btn btn-primary" onclick="navigate('trophy')">🏆 트로피 보러 가기</button>
+  </div>
+</div>
+
+<!-- ===== TROPHY ===== -->
+<div class="screen" id="screen-trophy">
+  <div class="section-title">🏆 트로피 룸</div>
+
+  <div class="card" style="background:linear-gradient(135deg,var(--primary),#9c5fff);text-align:center;margin-bottom:20px;">
+    <div style="font-size:52px;margin-bottom:8px;" id="trophy-level-icon">⚔️</div>
+    <div style="font-size:28px;font-weight:800;color:white;" id="trophy-level-name">Lv.1 Beginner</div>
+    <div style="font-size:14px;color:rgba(255,255,255,0.8);margin:8px 0;" id="trophy-xp-text">0 / 200 XP</div>
+    <div class="xp-bar-bg" style="background:rgba(0,0,0,0.25);">
+      <div class="xp-bar-fill" id="trophy-xp-bar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-value" id="stat-total-xp">0</div>
+      <div class="stat-label">총 XP</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-streak">0</div>
+      <div class="stat-label">🔥 연속 일수</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-words">0</div>
+      <div class="stat-label">배운 단어</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-sessions">0</div>
+      <div class="stat-label">완료한 읽기</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px;">🗺️ 레벨 로드맵</div>
+    <div id="level-roadmap"></div>
+  </div>
+
+  <div class="card">
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px;">📅 이번 달 기록</div>
+    <div class="calendar-grid" id="calendar-grid"></div>
+  </div>
+</div>
+
+<!-- ===== MOM MODE ===== -->
+<div class="screen" id="screen-mom">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <div class="section-title" style="margin:0;">🔑 엄마 모드</div>
+    <button onclick="lockMomMode()" style="background:none;border:1px solid var(--border);color:var(--text-muted);padding:6px 14px;border-radius:8px;font-size:13px;cursor:pointer;">잠금</button>
+  </div>
+
+  <div class="card">
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px;">📖 오늘 읽을 책</div>
+    <label class="mom-label">책 제목</label>
+    <input class="mom-input" id="mom-book-title" placeholder="예: Big Nate" type="text">
+    <label class="mom-label">챕터 / 페이지</label>
+    <input class="mom-input" id="mom-chapter" placeholder="예: Chapter 3 (p.24~36)" type="text">
+    <button class="btn btn-primary" onclick="saveBookSettings()">💾 저장</button>
+  </div>
+
+  <div class="card">
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px;">⚔️ Word Scout 단어 입력</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">오늘 읽을 페이지에서 단어 3~5개</div>
+    <label class="mom-label">영어 단어</label>
+    <input class="mom-input" id="mom-word" placeholder="예: exercise" type="text">
+    <label class="mom-label">한국어 뜻</label>
+    <input class="mom-input" id="mom-meaning" placeholder="예: 운동하다" type="text">
+    <label class="mom-label">예문 (선택사항)</label>
+    <input class="mom-input" id="mom-example" placeholder="예: I exercise every morning." type="text">
+    <button class="btn btn-accent" onclick="addWord()" style="margin-bottom:16px;">➕ 단어 추가</button>
+    <div id="mom-word-list"></div>
+    <button class="btn btn-outline" onclick="clearWords()" style="margin-top:4px;">🗑️ 전체 삭제</button>
+  </div>
+
+  <div class="card">
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px;">❓ Jay가 모른 단어</div>
+    <div id="mom-unknown-words"><div style="font-size:13px;color:var(--text-muted)">아직 없어요</div></div>
+  </div>
+
+  <div class="card">
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px;">🔐 PIN 변경</div>
+    <label class="mom-label">새 PIN (4자리 숫자)</label>
+    <input class="mom-input" id="new-pin" placeholder="4자리 숫자" type="number">
+    <button class="btn btn-outline" onclick="changePin()">PIN 변경</button>
+  </div>
+</div>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-home" onclick="navigate('home')">
+    <span class="icon">🏠</span><span>홈</span>
+  </button>
+  <button class="nav-btn" id="nav-wordscout" onclick="navigate('wordscout')">
+    <span class="icon">⚔️</span><span>단어</span>
+  </button>
+  <button class="nav-btn" id="nav-reading" onclick="navigate('reading')">
+    <span class="icon">📖</span><span>읽기</span>
+  </button>
+  <button class="nav-btn" id="nav-mission" onclick="navigate('mission')">
+    <span class="icon">🎯</span><span>미션</span>
+  </button>
+  <button class="nav-btn" id="nav-trophy" onclick="navigate('trophy')">
+    <span class="icon">🏆</span><span>트로피</span>
+  </button>
+  <button class="nav-btn" id="nav-mom" onclick="showPinScreen()">
+    <span class="icon">🔑</span><span>엄마</span>
+  </button>
+</nav>
+
+<script>
+// ──────────────────────────────────────────
+// DATA
+// ──────────────────────────────────────────
+const LEVELS = [
+  { level:1, name:'Beginner',   icon:'⚔️',  minXp:0,    maxXp:200  },
+  { level:2, name:'Reader',     icon:'📚',  minXp:200,  maxXp:500  },
+  { level:3, name:'Explorer',   icon:'🗺️', minXp:500,  maxXp:1000 },
+  { level:4, name:'Adventurer', icon:'🏹', minXp:1000, maxXp:2000 },
+  { level:5, name:'Hero',       icon:'🦸', minXp:2000, maxXp:9999 },
+];
+const MISSIONS = [
+  { id:1, emoji:'📝', title:'한 줄 요약',           desc:'오늘 읽은 내용을 한 문장으로 말해봐 (한국어 OK!)', xp:15 },
+  { id:2, emoji:'⭐', title:'최애 문장',             desc:'가장 재미있었던 문장을 소리 내어 한 번 더 읽기',   xp:10 },
+  { id:3, emoji:'🔮', title:'다음 이야기 예측',      desc:'다음에 어떻게 될 것 같아? 영어나 한국어로 말하기', xp:20 },
+  { id:4, emoji:'✏️', title:'단어로 문장 만들기',    desc:'오늘 Word Scout 단어 하나로 영어 문장 만들기',     xp:25 },
+];
+
+function defaultState() {
+  return {
+    xp:0, streak:0, lastDate:null,
+    todayXp:0, todayWordScout:false, todayReading:false, todayMission:false,
+    totalWords:0, totalSessions:0,
+    history:[], unknownWords:[],
+    settings:{ pin:'1234', bookTitle:'Big Nate', chapter:'' }
+  };
+}
+function getState() {
+  try {
+    const s = JSON.parse(localStorage.getItem('jayState') || '{}');
+    const d = defaultState();
+    return { ...d, ...s, settings:{ ...d.settings, ...(s.settings||{}) } };
+  } catch { return defaultState(); }
+}
+function saveState(s) { localStorage.setItem('jayState', JSON.stringify(s)); }
+function getWords() {
+  try { return JSON.parse(localStorage.getItem('jayWords') || '[]'); }
+  catch { return []; }
+}
+function saveWords(w) { localStorage.setItem('jayWords', JSON.stringify(w)); }
+
+let state = getState();
+
+// Daily reset
+function checkDailyReset() {
+  const today = new Date().toDateString();
+  if (state.lastDate === today) return;
+  if (state.todayXp > 0) {
+    state.history = state.history || [];
+    state.history.push({ date: state.lastDate, xp: state.todayXp,
+      ws: state.todayWordScout, reading: state.todayReading, mission: state.todayMission });
+    const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+    state.streak = (state.lastDate === yesterday.toDateString()) ? (state.streak||0)+1 : 1;
+  }
+  state.todayXp=0; state.todayWordScout=false; state.todayReading=false;
+  state.todayMission=false; state.unknownWords=[]; state.lastDate=today;
+  saveState(state);
+}
+
+// ──────────────────────────────────────────
+// NAVIGATION
+// ──────────────────────────────────────────
+function navigate(screen) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+screen).classList.add('active');
+  const nb = document.getElementById('nav-'+screen);
+  if (nb) nb.classList.add('active');
+  if (screen==='home')      updateHome();
+  if (screen==='wordscout') initWordScout();
+  if (screen==='reading')   updateReading();
+  if (screen==='mission')   updateMissions();
+  if (screen==='trophy')    updateTrophy();
+  if (screen==='mom')       updateMomMode();
+  window.scrollTo(0,0);
+}
+
+// ──────────────────────────────────────────
+// XP
+// ──────────────────────────────────────────
+function getLevelInfo(xp) {
+  for (let i=LEVELS.length-1;i>=0;i--) if (xp>=LEVELS[i].minXp) return LEVELS[i];
+  return LEVELS[0];
+}
+function addXp(amount, label) {
+  const prevLevel = getLevelInfo(state.xp).level;
+  state.xp += amount; state.todayXp += amount; saveState(state);
+  showXpPopup(amount, label);
+  floatXp(amount);
+  if (getLevelInfo(state.xp).level > prevLevel) setTimeout(()=>alert('🎉 레벨 업! 축하해, Jay!'), 800);
+}
+function showXpPopup(amount, label) {
+  document.getElementById('xpPopupText').textContent = '+'+amount+' XP';
+  document.getElementById('xpPopupSub').textContent = label;
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('xpPopup').classList.add('show');
+}
+function closeXpPopup() {
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('xpPopup').classList.remove('show');
+  updateHome();
+}
+function floatXp(amount) {
+  const el = document.createElement('div');
+  el.className = 'float-xp';
+  el.textContent = '+'+amount+' XP';
+  el.style.cssText = 'left:50%;top:40%;transform:translateX(-50%)';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 1600);
+}
+
+// ──────────────────────────────────────────
+// HOME
+// ──────────────────────────────────────────
+function updateHome() {
+  state = getState();
+  const li = getLevelInfo(state.xp);
+  const ni = LEVELS[li.level] || LEVELS[LEVELS.length-1];
+  const pct = Math.min(((state.xp-li.minXp)/(ni.minXp-li.minXp))*100, 100);
+  document.getElementById('home-level-badge').textContent = li.icon+' Lv.'+li.level+' '+li.name;
+  document.getElementById('home-xp').textContent = state.xp;
+  document.getElementById('home-xp-bar').style.width = pct+'%';
+  document.getElementById('home-next-xp').textContent = ni.minXp;
+  document.getElementById('streak-count').textContent = state.streak||0;
+  document.getElementById('today-xp-display').textContent = state.todayXp||0;
+  document.getElementById('today-book-info').textContent = state.settings.bookTitle||'Big Nate';
+  const h = new Date().getHours();
+  document.getElementById('greeting-text').textContent =
+    h<12?'좋은 아침이야, Jay! ☀️': h<18?'안녕, Jay! 🌤️':'저녁이야, Jay! 🌙';
+  setCheck('check-wordscout', state.todayWordScout);
+  setCheck('check-reading',   state.todayReading);
+  setCheck('check-mission',   state.todayMission);
+}
+function setCheck(id, done) {
+  const el = document.getElementById(id);
+  el.textContent = done?'✓':'○';
+  el.className = 'activity-check '+(done?'check-done':'check-pending');
+}
+
+// ──────────────────────────────────────────
+// WORD SCOUT
+// ──────────────────────────────────────────
+let wsIdx=0, wsKnown=0, wsWords=[];
+
+function initWordScout() {
+  wsWords = getWords(); wsIdx=0; wsKnown=0;
+  const noWords = document.getElementById('no-words-state');
+  const active   = document.getElementById('wordscout-active');
+  const done     = document.getElementById('wordscout-done');
+  if (wsWords.length===0) { noWords.style.display='block'; active.style.display='none'; done.style.display='none'; return; }
+  noWords.style.display='none';
+  if (state.todayWordScout) { active.style.display='none'; done.style.display='block'; return; }
+  done.style.display='none'; active.style.display='block';
+  document.getElementById('ws-total').textContent = wsWords.length;
+  renderWsDots(); showWsCard();
+}
+function showWsCard() {
+  if (wsIdx>=wsWords.length) { showWsDone(); return; }
+  const w = wsWords[wsIdx];
+  document.getElementById('ws-word').textContent = w.word;
+  document.getElementById('ws-meaning').textContent = w.meaning;
+  document.getElementById('ws-example').textContent = w.example||'';
+  document.getElementById('ws-hint').textContent = '';
+  document.getElementById('ws-current').textContent = wsIdx+1;
+  document.getElementById('flipCard').classList.remove('flipped');
+}
+function flipCard() { document.getElementById('flipCard').classList.toggle('flipped'); }
+function wsNext(known) {
+  if (known) wsKnown++;
+  wsIdx++; renderWsDots();
+  wsIdx>=wsWords.length ? showWsDone() : showWsCard();
+}
+function renderWsDots() {
+  const c = document.getElementById('ws-dots');
+  c.innerHTML = '';
+  wsWords.forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.style.cssText=`width:10px;height:10px;border-radius:50%;background:${i<wsIdx?'var(--success)':i===wsIdx?'var(--primary)':'var(--border)'}`;
+    c.appendChild(d);
+  });
+}
+function showWsDone() {
+  document.getElementById('wordscout-active').style.display='none';
+  document.getElementById('wordscout-done').style.display='block';
+  document.getElementById('ws-known-count').textContent = wsKnown;
+  document.getElementById('ws-unknown-count').textContent = wsWords.length-wsKnown;
+  state.totalWords=(state.totalWords||0)+(wsWords.length-wsKnown);
+  if (!state.todayWordScout) { state.todayWordScout=true; saveState(state); addXp(20,'Word Scout 완료! ⚔️'); }
+}
+function wsRestart() {
+  wsIdx=0; wsKnown=0;
+  document.getElementById('wordscout-done').style.display='none';
+  document.getElementById('wordscout-active').style.display='block';
+  renderWsDots(); showWsCard();
+}
+
+// ──────────────────────────────────────────
+// READING TIMER
+// ──────────────────────────────────────────
+let timerInterval=null, timerSec=900, timerRunning=false;
+const TIMER_TOTAL=900;
+
+function updateReading() {
+  state=getState();
+  document.getElementById('reading-book-title').textContent = state.settings.bookTitle||'Big Nate';
+  document.getElementById('reading-chapter-info').textContent = state.settings.chapter||'';
+  if (state.todayReading) {
+    document.getElementById('timer-start-btn').textContent='✅ 완료됨';
+    document.getElementById('timer-start-btn').disabled=true;
+    document.getElementById('reading-complete-btn').style.display='none';
+  }
+  updateUnknownDisplay();
+}
+function timerToggle() {
+  if (timerRunning) {
+    clearInterval(timerInterval); timerRunning=false;
+    document.getElementById('timer-start-btn').innerHTML='▶ 계속';
+  } else {
+    timerRunning=true;
+    document.getElementById('timer-start-btn').innerHTML='⏸ 일시정지';
+    timerInterval=setInterval(()=>{
+      timerSec--;
+      updateTimerDisplay();
+      if (timerSec<=0) {
+        clearInterval(timerInterval); timerRunning=false; timerSec=0;
+        document.getElementById('timer-start-btn').innerHTML='⏱ 완료!';
+        document.getElementById('reading-complete-btn').style.display='block';
+        updateTimerDisplay();
+      }
+    },1000);
+  }
+}
+function timerReset() {
+  clearInterval(timerInterval); timerRunning=false; timerSec=TIMER_TOTAL;
+  document.getElementById('timer-start-btn').innerHTML='▶ 시작';
+  document.getElementById('timer-start-btn').disabled=false;
+  document.getElementById('reading-complete-btn').style.display='none';
+  updateTimerDisplay();
+}
+function updateTimerDisplay() {
+  const m=Math.floor(timerSec/60), s=timerSec%60;
+  document.getElementById('timer-display').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  const offset=553*(1-timerSec/TIMER_TOTAL);
+  document.getElementById('timerRingProgress').style.strokeDashoffset=offset;
+}
+function completeReading() {
+  if (state.todayReading) return;
+  state.todayReading=true; state.totalSessions=(state.totalSessions||0)+1; saveState(state);
+  document.getElementById('reading-complete-btn').style.display='none';
+  document.getElementById('timer-start-btn').textContent='✅ 완료됨';
+  document.getElementById('timer-start-btn').disabled=true;
+  addXp(25,'읽기 완료! 📖');
+}
+function reportUnknownWord() {
+  const word=prompt('모르는 단어가 뭐야? (영어로 적어봐)');
+  if (word&&word.trim()) {
+    state.unknownWords=state.unknownWords||[];
+    state.unknownWords.push({word:word.trim()});
+    saveState(state);
+    updateUnknownDisplay();
+    document.getElementById('reading-complete-btn').style.display='block';
+  }
+}
+function updateUnknownDisplay() {
+  const words=state.unknownWords||[];
+  const sec=document.getElementById('unknown-words-section');
+  const list=document.getElementById('unknown-words-list');
+  if (!words.length){sec.style.display='none';return;}
+  sec.style.display='block';
+  list.innerHTML=words.map(w=>`<div style="background:var(--card);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:14px;">❓ ${w.word}</div>`).join('');
+}
+
+// ──────────────────────────────────────────
+// MISSION
+// ──────────────────────────────────────────
+let selectedMission=null;
+
+function updateMissions() {
+  state=getState();
+  const list=document.getElementById('mission-list');
+  const area=document.getElementById('mission-complete-area');
+  const done=document.getElementById('mission-done-state');
+  if (state.todayMission){list.style.display='none';area.style.display='none';done.style.display='block';return;}
+  done.style.display='none'; list.style.display='block';
+  list.innerHTML=MISSIONS.map(m=>`
+    <div class="mission-card" id="mission-${m.id}" onclick="selectMission(${m.id})">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+        <span style="font-size:24px;">${m.emoji}</span>
+        <div>
+          <div class="mission-title">${m.title}</div>
+          <div class="mission-xp">+${m.xp} XP</div>
+        </div>
+      </div>
+      <div class="mission-desc">${m.desc}</div>
+    </div>
+  `).join('');
+  selectedMission=null; area.style.display='none';
+}
+function selectMission(id) {
+  document.querySelectorAll('.mission-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('mission-'+id).classList.add('selected');
+  selectedMission=MISSIONS.find(m=>m.id===id);
+  const area=document.getElementById('mission-complete-area');
+  area.style.display='block';
+  area.innerHTML=`<button class="btn btn-success" onclick="completeMission()">✅ 미션 완료! (+${selectedMission.xp} XP)</button>`;
+}
+function completeMission() {
+  if (!selectedMission||state.todayMission) return;
+  state.todayMission=true; saveState(state);
+  const xp=selectedMission.xp, label=selectedMission.title+' 완료! '+selectedMission.emoji;
+  addXp(xp,label);
+  setTimeout(()=>{
+    document.getElementById('mission-list').style.display='none';
+    document.getElementById('mission-complete-area').style.display='none';
+    document.getElementById('mission-done-state').style.display='block';
+  },400);
+}
+
+// ──────────────────────────────────────────
+// TROPHY
+// ──────────────────────────────────────────
+function updateTrophy() {
+  state=getState();
+  const li=getLevelInfo(state.xp);
+  const ni=LEVELS[li.level]||LEVELS[LEVELS.length-1];
+  const pct=Math.min(((state.xp-li.minXp)/(ni.minXp-li.minXp))*100,100);
+  document.getElementById('trophy-level-icon').textContent=li.icon;
+  document.getElementById('trophy-level-name').textContent='Lv.'+li.level+' '+li.name;
+  document.getElementById('trophy-xp-text').textContent=state.xp+' / '+ni.minXp+' XP';
+  document.getElementById('trophy-xp-bar').style.width=pct+'%';
+  document.getElementById('stat-total-xp').textContent=state.xp;
+  document.getElementById('stat-streak').textContent=state.streak||0;
+  document.getElementById('stat-words').textContent=state.totalWords||0;
+  document.getElementById('stat-sessions').textContent=state.totalSessions||0;
+  // roadmap
+  document.getElementById('level-roadmap').innerHTML=LEVELS.map(l=>{
+    const unlocked=state.xp>=l.minXp, current=li.level===l.level;
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);opacity:${unlocked?1:0.4}">
+      <span style="font-size:24px;">${l.icon}</span>
+      <div style="flex:1">
+        <div style="font-weight:700;color:${current?'var(--accent)':'var(--text)'}">Lv.${l.level} ${l.name}${current?' ← 현재':''}</div>
+        <div style="font-size:12px;color:var(--text-muted)">${l.minXp} XP 이상</div>
+      </div>
+      <div style="font-size:18px;">${unlocked?'✅':'🔒'}</div>
+    </div>`;
+  }).join('');
+  // calendar
+  const now=new Date(), year=now.getFullYear(), month=now.getMonth();
+  const days=new Date(year,month+1,0).getDate(), today=now.getDate();
+  const doneDates=new Set((state.history||[]).filter(h=>h.xp>0).map(h=>h.date));
+  const grid=document.getElementById('calendar-grid');
+  grid.innerHTML='';
+  for(let i=1;i<=days;i++){
+    const ds=new Date(year,month,i).toDateString();
+    const isToday=i===today;
+    const isDone=doneDates.has(ds)||(isToday&&state.todayXp>0);
+    const d=document.createElement('div');
+    d.className='cal-day'+(isDone?' done':'')+(isToday?' today':'');
+    d.textContent=i; grid.appendChild(d);
+  }
+}
+
+// ──────────────────────────────────────────
+// MOM MODE
+// ──────────────────────────────────────────
+let momUnlocked=false, pinBuffer='';
+
+function showPinScreen() {
+  if (momUnlocked){navigate('mom');return;}
+  pinBuffer=''; updatePinDots();
+  document.getElementById('pinScreen').classList.add('show');
+}
+function pinInput(d) {
+  if (pinBuffer.length>=4) return;
+  pinBuffer+=d; updatePinDots();
+  if (pinBuffer.length===4) {
+    setTimeout(()=>{
+      if (pinBuffer===(state.settings.pin||'1234')) {
+        document.getElementById('pinScreen').classList.remove('show');
+        momUnlocked=true; navigate('mom');
+      } else { pinBuffer=''; updatePinDots(); }
+      pinBuffer=''; updatePinDots();
+    },300);
+  }
+}
+function pinDelete(){pinBuffer=pinBuffer.slice(0,-1);updatePinDots();}
+function pinCancel(){pinBuffer='';updatePinDots();document.getElementById('pinScreen').classList.remove('show');}
+function updatePinDots(){for(let i=0;i<4;i++){const d=document.getElementById('dot'+i);d.className='pin-dot'+(i<pinBuffer.length?' filled':'');}}
+function lockMomMode(){momUnlocked=false;navigate('home');}
+function updateMomMode(){
+  state=getState();
+  document.getElementById('mom-book-title').value=state.settings.bookTitle||'';
+  document.getElementById('mom-chapter').value=state.settings.chapter||'';
+  renderMomWordList(); renderMomUnknownWords();
+}
+function saveBookSettings(){
+  state.settings.bookTitle=document.getElementById('mom-book-title').value;
+  state.settings.chapter=document.getElementById('mom-chapter').value;
+  saveState(state); alert('저장됐어요! ✅');
+}
+function addWord(){
+  const word=document.getElementById('mom-word').value.trim();
+  const meaning=document.getElementById('mom-meaning').value.trim();
+  const example=document.getElementById('mom-example').value.trim();
+  if(!word||!meaning){alert('단어와 뜻을 입력해주세요');return;}
+  const words=getWords(); words.push({word,meaning,example}); saveWords(words);
+  document.getElementById('mom-word').value='';
+  document.getElementById('mom-meaning').value='';
+  document.getElementById('mom-example').value='';
+  renderMomWordList();
+}
+function renderMomWordList(){
+  const words=getWords();
+  const list=document.getElementById('mom-word-list');
+  if(!words.length){list.innerHTML='<div style="font-size:13px;color:var(--text-muted)">아직 단어가 없어요</div>';return;}
+  list.innerHTML=words.map((w,i)=>`
+    <div class="word-item">
+      <div><div style="font-size:15px;font-weight:600;">${w.word}</div><div style="font-size:12px;color:var(--text-muted)">${w.meaning}</div></div>
+      <button class="delete-btn" onclick="deleteWord(${i})">✕</button>
+    </div>`).join('');
+}
+function deleteWord(i){const w=getWords();w.splice(i,1);saveWords(w);renderMomWordList();}
+function clearWords(){if(confirm('단어를 모두 삭제할까요?')){saveWords([]);renderMomWordList();}}
+function renderMomUnknownWords(){
+  const words=state.unknownWords||[];
+  const el=document.getElementById('mom-unknown-words');
+  if(!words.length){el.innerHTML='<div style="font-size:13px;color:var(--text-muted)">아직 없어요</div>';return;}
+  el.innerHTML=words.map(w=>`<div style="background:var(--surface);border-radius:10px;padding:10px 12px;margin-bottom:8px;border:1px solid var(--border);font-size:15px;font-weight:600;">❓ ${w.word}</div>`).join('');
+}
+function changePin(){
+  const p=document.getElementById('new-pin').value;
+  if(!/^\d{4}$/.test(p)){alert('4자리 숫자를 입력해주세요');return;}
+  state.settings.pin=p; saveState(state);
+  document.getElementById('new-pin').value='';
+  alert('PIN이 변경됐어요! ✅');
+}
+
+// ──────────────────────────────────────────
+// INIT
+// ──────────────────────────────────────────
+checkDailyReset();
+updateHome();
+updateTimerDisplay();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
