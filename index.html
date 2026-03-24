@@ -345,6 +345,68 @@
     }
     .progress-text { text-align: center; font-size: 14px; color: var(--text-muted); margin-bottom: 16px; }
     .ws-dots-row { display: flex; justify-content: center; gap: 8px; }
+    /* Mission textarea */
+    .mission-textarea {
+      width: 100%; box-sizing: border-box;
+      background: var(--surface); border: 2px solid var(--border);
+      border-radius: 12px; color: var(--text); font-size: 15px;
+      padding: 12px; margin-top: 12px; resize: none;
+      font-family: inherit; line-height: 1.6; min-height: 90px;
+      transition: border-color 0.2s;
+    }
+    .mission-textarea:focus { outline: none; border-color: var(--primary); }
+    .mission-textarea::placeholder { color: var(--text-muted); }
+    .char-hint { font-size: 12px; color: var(--text-muted); margin-top: 6px; text-align: right; }
+    .word-hint-tag {
+      display: inline-block; background: rgba(108,99,255,0.15);
+      border: 1px solid var(--primary); border-radius: 20px;
+      padding: 3px 10px; font-size: 13px; color: var(--primary);
+      font-weight: 600; margin-bottom: 8px;
+    }
+    /* Submission review (Mom Mode) */
+    .submission-card {
+      background: var(--surface); border: 2px solid var(--border);
+      border-radius: 14px; padding: 16px; margin-bottom: 14px;
+    }
+    .submission-card .sub-text {
+      background: var(--card); border-radius: 10px;
+      padding: 10px 12px; font-size: 14px; line-height: 1.7;
+      color: var(--text); margin: 10px 0; white-space: pre-wrap;
+      border-left: 3px solid var(--primary);
+    }
+    .xp-btn-group { display: flex; gap: 8px; margin: 10px 0; }
+    .xp-btn {
+      flex: 1; padding: 8px 0; border: 2px solid var(--border);
+      border-radius: 10px; background: var(--card); color: var(--text);
+      font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.15s;
+    }
+    .xp-btn.selected { border-color: var(--accent); background: rgba(255,215,0,0.12); color: var(--accent); }
+    .praise-input {
+      width: 100%; box-sizing: border-box; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 10px; color: var(--text);
+      font-size: 13px; padding: 10px; font-family: inherit; resize: none; height: 56px;
+    }
+    .praise-input:focus { outline: none; border-color: var(--primary); }
+    /* Praise popup */
+    .praise-popup {
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      background: var(--card); border: 2px solid var(--accent);
+      border-radius: 20px; padding: 32px 24px; text-align: center;
+      z-index: 300; min-width: 280px; max-width: 340px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      opacity: 0; pointer-events: none; transition: all 0.3s;
+    }
+    .praise-popup.show { opacity: 1; pointer-events: auto; transform: translate(-50%,-50%) scale(1); }
+    .praise-msg-box {
+      background: var(--surface); border-radius: 12px;
+      padding: 12px 16px; margin: 12px 0;
+      font-size: 15px; color: var(--text); line-height: 1.6; font-style: italic;
+    }
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
   </style>
 </head>
 <body>
@@ -373,6 +435,16 @@
     <div class="pin-key" onclick="pinInput('0')">0</div>
     <div class="pin-key" onclick="pinDelete()">⌫</div>
   </div>
+</div>
+
+<!-- Praise Overlay -->
+<div class="overlay" id="overlay-praise"></div>
+<div class="praise-popup" id="praisePopup">
+  <div style="font-size:64px;margin-bottom:8px;">🎉</div>
+  <div id="praisePopupTitle" style="font-size:22px;font-weight:800;margin-bottom:4px;">엄마/아빠가 칭찬했어!</div>
+  <div id="praisePopupXp" style="font-size:28px;font-weight:900;color:var(--accent);margin-bottom:8px;"></div>
+  <div id="praisePopupMsg" class="praise-msg-box" style="display:none;"></div>
+  <button class="btn btn-primary" onclick="closePraisePopup()" style="margin-top:8px;">최고야! 🙌</button>
 </div>
 
 <!-- XP Overlay -->
@@ -642,6 +714,11 @@
   </div>
 
   <div class="card">
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px;">📬 Jay의 미션 답변</div>
+    <div id="mom-submissions"><div style="font-size:13px;color:var(--text-muted)">아직 제출된 답변이 없어요</div></div>
+  </div>
+
+  <div class="card">
     <div style="font-size:15px;font-weight:700;margin-bottom:16px;">❓ Jay가 모른 단어</div>
     <div id="mom-unknown-words"><div style="font-size:13px;color:var(--text-muted)">아직 없어요</div></div>
   </div>
@@ -688,10 +765,10 @@ const LEVELS = [
   { level:5, name:'Hero',       icon:'🦸', minXp:2000, maxXp:9999 },
 ];
 const MISSIONS = [
-  { id:1, emoji:'📝', title:'한 줄 요약',           desc:'오늘 읽은 내용을 한 문장으로 말해봐 (한국어 OK!)', xp:15 },
-  { id:2, emoji:'⭐', title:'최애 문장',             desc:'가장 재미있었던 문장을 소리 내어 한 번 더 읽기',   xp:10 },
-  { id:3, emoji:'🔮', title:'다음 이야기 예측',      desc:'다음에 어떻게 될 것 같아? 영어나 한국어로 말하기', xp:20 },
-  { id:4, emoji:'✏️', title:'단어로 문장 만들기',    desc:'오늘 Word Scout 단어 하나로 영어 문장 만들기',     xp:25 },
+  { id:1, emoji:'📝', title:'한 줄 요약',           desc:'오늘 읽은 내용을 한 문장으로 써봐 (한국어 OK!)',    xp:15, placeholder:'오늘 이야기는... (한국어 OK!)' },
+  { id:2, emoji:'⭐', title:'최애 문장',             desc:'가장 재미있었던 문장을 책에서 찾아 써봐',           xp:10, placeholder:'책에서 찾은 문장을 그대로 써봐 ✏️' },
+  { id:3, emoji:'🔮', title:'다음 이야기 예측',      desc:'다음에 어떻게 될 것 같아? 영어나 한국어로 써봐',    xp:20, placeholder:'다음에는... (영어/한국어 OK!)' },
+  { id:4, emoji:'✏️', title:'단어로 문장 만들기',    desc:'오늘 Word Scout 단어 하나로 영어 문장 써봐',        xp:25, placeholder:'영어로 문장을 써봐! (예: I saw a...)' },
 ];
 
 function defaultState() {
@@ -700,6 +777,7 @@ function defaultState() {
     todayXp:0, todayWordScout:false, todayReading:false, todayMission:false,
     totalWords:0, totalSessions:0,
     history:[], unknownWords:[],
+    missionSubmissions:[],
     settings:{ pin:'1234', bookTitle:'Big Nate', chapter:'' }
   };
 }
@@ -707,7 +785,7 @@ function getState() {
   try {
     const s = JSON.parse(localStorage.getItem('jayState') || '{}');
     const d = defaultState();
-    return { ...d, ...s, settings:{ ...d.settings, ...(s.settings||{}) } };
+    return { ...d, ...s, settings:{ ...d.settings, ...(s.settings||{}) }, missionSubmissions: s.missionSubmissions || [] };
   } catch { return defaultState(); }
 }
 function saveState(s) { localStorage.setItem('jayState', JSON.stringify(s)); }
@@ -726,7 +804,7 @@ function checkDailyReset() {
   if (state.todayXp > 0) {
     state.history = state.history || [];
     state.history.push({ date: state.lastDate, xp: state.todayXp,
-      ws: state.todayWordScout, reading: state.todayReading, mission: state.todayMission });
+      ws: state.todayWordScout, reading: state.todayReading, mission: state.todayMission === true });
     const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
     state.streak = (state.lastDate === yesterday.toDateString()) ? (state.streak||0)+1 : 1;
   }
@@ -744,7 +822,7 @@ function navigate(screen) {
   document.getElementById('screen-'+screen).classList.add('active');
   const nb = document.getElementById('nav-'+screen);
   if (nb) nb.classList.add('active');
-  if (screen==='home')      updateHome();
+  if (screen==='home')      { updateHome(); checkPendingRewards(); }
   if (screen==='wordscout') initWordScout();
   if (screen==='reading')   updateReading();
   if (screen==='mission')   updateMissions();
@@ -810,9 +888,18 @@ function updateHome() {
   setCheck('check-mission',   state.todayMission);
 }
 function setCheck(id, done) {
-  const el = document.getElementById(id);
-  el.textContent = done?'✓':'○';
-  el.className = 'activity-check '+(done?'check-done':'check-pending');
+  const el=document.getElementById(id);
+  if (done==='pending') {
+    el.textContent='⏳';
+    el.className='activity-check';
+    el.style.background='rgba(255,200,0,0.15)';
+    el.style.color='#f0c000';
+    el.style.fontSize='16px';
+  } else {
+    el.style.background=''; el.style.color=''; el.style.fontSize='';
+    el.textContent=done?'✓':'○';
+    el.className='activity-check '+(done?'check-done':'check-pending');
+  }
 }
 
 // ──────────────────────────────────────────
@@ -958,7 +1045,20 @@ function updateMissions() {
   const list=document.getElementById('mission-list');
   const area=document.getElementById('mission-complete-area');
   const done=document.getElementById('mission-done-state');
-  if (state.todayMission){list.style.display='none';area.style.display='none';done.style.display='block';return;}
+  if (state.todayMission==='pending') {
+    list.style.display='none'; area.style.display='none'; done.style.display='block';
+    done.innerHTML=`
+      <div style="font-size:80px;margin-bottom:12px;animation:float 2s ease-in-out infinite;">✉️</div>
+      <div style="font-size:22px;font-weight:800;margin-bottom:8px;">엄마/아빠한테 보냈어!</div>
+      <div style="font-size:14px;color:var(--text-muted);margin-bottom:8px;">검토 기다리는 중... ⏳</div>
+      <div style="font-size:13px;color:var(--text-muted);">승인되면 XP를 받을 수 있어!</div>
+    `;
+    return;
+  }
+  if (state.todayMission===true) {
+    list.style.display='none'; area.style.display='none'; done.style.display='block';
+    return;
+  }
   done.style.display='none'; list.style.display='block';
   list.innerHTML=MISSIONS.map(m=>`
     <div class="mission-card" id="mission-${m.id}" onclick="selectMission(${m.id})">
@@ -980,18 +1080,68 @@ function selectMission(id) {
   selectedMission=MISSIONS.find(m=>m.id===id);
   const area=document.getElementById('mission-complete-area');
   area.style.display='block';
-  area.innerHTML=`<button class="btn btn-success" onclick="completeMission()">✅ 미션 완료! (+${selectedMission.xp} XP)</button>`;
+
+  // 미션 4: Word Scout 단어 힌트 표시
+  let wordHint='';
+  if (id===4) {
+    const words=getWords();
+    if (words.length>0) {
+      wordHint=`<div style="margin-top:8px;"><span style="font-size:12px;color:var(--text-muted);">오늘 단어: </span><span class="word-hint-tag">📌 ${words[0].word}</span></div>`;
+    }
+  }
+
+  area.innerHTML=`
+    ${wordHint}
+    <textarea class="mission-textarea" id="mission-input"
+      placeholder="${selectedMission.placeholder}"
+      oninput="updateCharHint(this)"></textarea>
+    <div class="char-hint" id="char-hint">최소 1자 이상 입력해줘 ✏️</div>
+    <button class="btn btn-success" onclick="completeMission()" style="margin-top:12px;">
+      ✉️ 엄마/아빠한테 보내기 (+${selectedMission.xp} XP 예정)
+    </button>
+  `;
 }
+
+function updateCharHint(el) {
+  const len=el.value.trim().length;
+  document.getElementById('char-hint').textContent=
+    len===0?'최소 1자 이상 입력해줘 ✏️':`${len}자 작성 중 👍`;
+}
+
 function completeMission() {
-  if (!selectedMission||state.todayMission) return;
-  state.todayMission=true; saveState(state);
-  const xp=selectedMission.xp, label=selectedMission.title+' 완료! '+selectedMission.emoji;
-  addXp(xp,label);
-  setTimeout(()=>{
-    document.getElementById('mission-list').style.display='none';
-    document.getElementById('mission-complete-area').style.display='none';
-    document.getElementById('mission-done-state').style.display='block';
-  },400);
+  if (!selectedMission||state.todayMission===true) return;
+  const inputEl=document.getElementById('mission-input');
+  const text=inputEl?inputEl.value.trim():'';
+  if (!text){alert('내용을 입력해줘! ✏️');return;}
+
+  const submission={
+    id:Date.now(),
+    date:new Date().toDateString(),
+    missionId:selectedMission.id,
+    missionTitle:selectedMission.title,
+    missionEmoji:selectedMission.emoji,
+    text:text,
+    status:'pending',
+    baseXp:selectedMission.xp,
+    bonusXp:0,
+    praiseMsg:'',
+    notified:false
+  };
+  state.missionSubmissions=state.missionSubmissions||[];
+  state.missionSubmissions.push(submission);
+  state.todayMission='pending';
+  saveState(state);
+
+  document.getElementById('mission-list').style.display='none';
+  document.getElementById('mission-complete-area').style.display='none';
+  const done=document.getElementById('mission-done-state');
+  done.style.display='block';
+  done.innerHTML=`
+    <div style="font-size:80px;margin-bottom:12px;animation:float 2s ease-in-out infinite;">✉️</div>
+    <div style="font-size:22px;font-weight:800;margin-bottom:8px;">엄마/아빠한테 보냈어!</div>
+    <div style="font-size:14px;color:var(--text-muted);margin-bottom:8px;">검토 기다리는 중... ⏳</div>
+    <div style="font-size:13px;color:var(--text-muted);">승인되면 XP를 받을 수 있어!</div>
+  `;
 }
 
 // ──────────────────────────────────────────
@@ -1069,7 +1219,48 @@ function updateMomMode(){
   state=getState();
   document.getElementById('mom-book-title').value=state.settings.bookTitle||'';
   document.getElementById('mom-chapter').value=state.settings.chapter||'';
-  renderMomWordList(); renderMomUnknownWords();
+  renderMomWordList(); renderMomUnknownWords(); renderMomSubmissions();
+}
+function renderMomSubmissions(){
+  state=getState();
+  const subs=(state.missionSubmissions||[]).filter(s=>s.status==='pending');
+  const el=document.getElementById('mom-submissions');
+  if(!subs.length){el.innerHTML='<div style="font-size:13px;color:var(--text-muted)">아직 제출된 답변이 없어요</div>';return;}
+  el.innerHTML=subs.map(s=>`
+    <div class="submission-card" id="subcard-${s.id}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <span style="font-size:20px;">${s.missionEmoji||'🎯'}</span>
+        <span style="font-weight:700;font-size:15px;">${s.missionTitle||''}</span>
+        <span style="font-size:11px;color:var(--text-muted);margin-left:auto;">${s.date||''}</span>
+      </div>
+      <div class="sub-text">${s.text||''}</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;">보너스 XP 선택 (기본 ${s.baseXp||0} XP 별도)</div>
+      <div class="xp-btn-group" id="xpbtn-${s.id}">
+        ${[5,10,15,20].map(v=>`<button class="xp-btn" data-xp="${v}" onclick="selectBonus(this,${s.id})">+${v}</button>`).join('')}
+      </div>
+      <textarea class="praise-input" id="praise-${s.id}" placeholder="짧은 칭찬 메시지 (선택) 예: 잘했어! 👍"></textarea>
+      <button class="btn btn-success" style="margin-top:10px;" onclick="approveMission(${s.id})">✅ 승인하기</button>
+    </div>
+  `).join('');
+}
+function selectBonus(btn,subId){
+  document.querySelectorAll(`#xpbtn-${subId} .xp-btn`).forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+function approveMission(subId){
+  state=getState();
+  const sub=(state.missionSubmissions||[]).find(s=>s.id===subId);
+  if(!sub) return;
+  const selectedBtn=document.querySelector(`#xpbtn-${subId} .xp-btn.selected`);
+  if(!selectedBtn){alert('보너스 XP를 선택해주세요! (+5/+10/+15/+20)');return;}
+  const bonusXp=parseInt(selectedBtn.dataset.xp)||0;
+  const praiseMsg=document.getElementById('praise-'+subId).value.trim();
+  sub.status='reviewed'; sub.bonusXp=bonusXp; sub.praiseMsg=praiseMsg; sub.notified=false;
+  saveState(state);
+  const card=document.getElementById('subcard-'+subId);
+  card.style.opacity='0.5';
+  card.innerHTML='<div style="text-align:center;padding:12px;font-size:20px;">✅ 승인 완료!</div>';
+  setTimeout(()=>renderMomSubmissions(),800);
 }
 function saveBookSettings(){
   state.settings.bookTitle=document.getElementById('mom-book-title').value;
@@ -1114,10 +1305,40 @@ function changePin(){
 }
 
 // ──────────────────────────────────────────
+// PENDING REWARDS
+// ──────────────────────────────────────────
+function checkPendingRewards(){
+  state=getState();
+  const reviewed=(state.missionSubmissions||[]).filter(s=>s.status==='reviewed'&&!s.notified);
+  if(!reviewed.length) return;
+  const s=reviewed[0];
+  const totalXp=s.baseXp+(s.bonusXp||0);
+  const prevLevel=getLevelInfo(state.xp).level;
+  state.xp+=totalXp; state.todayXp+=totalXp;
+  if(state.todayMission==='pending') state.todayMission=true;
+  s.notified=true;
+  saveState(state);
+  document.getElementById('praisePopupXp').textContent='+'+totalXp+' XP';
+  const msgEl=document.getElementById('praisePopupMsg');
+  if(s.praiseMsg){msgEl.textContent='"'+s.praiseMsg+'"';msgEl.style.display='block';}
+  else{msgEl.style.display='none';}
+  document.getElementById('overlay-praise').classList.add('show');
+  document.getElementById('praisePopup').classList.add('show');
+  if(getLevelInfo(state.xp).level>prevLevel) setTimeout(()=>alert('🎉 레벨 업! 축하해, Jay!'),1200);
+}
+function closePraisePopup(){
+  document.getElementById('overlay-praise').classList.remove('show');
+  document.getElementById('praisePopup').classList.remove('show');
+  updateHome();
+  setTimeout(checkPendingRewards,400);
+}
+
+// ──────────────────────────────────────────
 // INIT
 // ──────────────────────────────────────────
 checkDailyReset();
 updateHome();
+checkPendingRewards();
 updateTimerDisplay();
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
