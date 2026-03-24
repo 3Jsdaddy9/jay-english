@@ -602,6 +602,9 @@
     <button class="mode-toggle-btn" id="mode-btn-listen" onclick="setReadingMode('listening')">🎧 듣기+읽기</button>
   </div>
 
+  <!-- YouTube Player (🎧 모드 시 표시) -->
+  <div id="youtube-player" style="display:none;margin-bottom:16px;"></div>
+
   <div class="card" style="background:linear-gradient(135deg,#1a1a3e,#252550);">
     <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">오늘 읽을 책</div>
     <div style="font-size:18px;font-weight:700;" id="reading-book-title">Big Nate</div>
@@ -748,6 +751,9 @@
     <input class="mom-input" id="mom-chapter" placeholder="예: Chapter 3 (p.24~36)" type="text">
     <label class="mom-label">책 총 페이지 수</label>
     <input class="mom-input" id="mom-total-pages" placeholder="예: 80" type="number" min="1">
+    <label class="mom-label">🎧 오디오북 YouTube URL</label>
+    <input class="mom-input" id="mom-audio-url" placeholder="예: https://youtube.com/watch?v=xxxxx" type="url">
+    <div style="font-size:11px;color:var(--text-muted);margin-top:-8px;margin-bottom:12px;">YouTube에서 오디오북 URL을 복사해 붙여넣기 해주세요</div>
     <button class="btn btn-primary" onclick="saveBookSettings()">💾 저장</button>
   </div>
 
@@ -836,7 +842,7 @@ function defaultState() {
     history:[], unknownWords:[],
     missionSubmissions:[],
     readingLog:[],
-    settings:{ pin:'1234', bookTitle:'Big Nate', chapter:'', bookTotalPages:0 }
+    settings:{ pin:'1234', bookTitle:'Big Nate', chapter:'', bookTotalPages:0, audioUrl:'' }
   };
 }
 function getState() {
@@ -1025,6 +1031,48 @@ let timerInterval=null, timerSec=900, timerRunning=false;
 const TIMER_TOTAL=900;
 let listeningMode=false;
 
+function extractYouTubeId(url) {
+  if(!url) return null;
+  const watchMatch=url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+  if(watchMatch) return watchMatch[1];
+  const shortMatch=url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+  if(shortMatch) return shortMatch[1];
+  const embedMatch=url.match(/embed\/([a-zA-Z0-9_-]{11})/);
+  if(embedMatch) return embedMatch[1];
+  return null;
+}
+function renderYouTubePlayer() {
+  state=getState();
+  const playerDiv=document.getElementById('youtube-player');
+  const url=state.settings.audioUrl||'';
+  const videoId=extractYouTubeId(url);
+  if(videoId) {
+    playerDiv.style.display='block';
+    playerDiv.innerHTML=`
+      <div class="card" style="padding:10px;">
+        <div style="font-size:12px;color:var(--primary);font-weight:600;margin-bottom:8px;">🎧 오디오북 재생</div>
+        <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:10px;">
+          <iframe
+            src="https://www.youtube.com/embed/${videoId}?playsinline=1&rel=0"
+            style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen loading="lazy">
+          </iframe>
+        </div>
+      </div>`;
+  } else if(url) {
+    playerDiv.style.display='block';
+    playerDiv.innerHTML=`<a href="${url}" target="_blank" class="btn btn-primary" style="text-decoration:none;display:flex;">🎧 음원 재생하기 (새 탭)</a>`;
+  } else {
+    playerDiv.style.display='block';
+    playerDiv.innerHTML=`
+      <div style="text-align:center;padding:16px;background:var(--surface);border-radius:12px;border:1px dashed var(--border);">
+        <div style="font-size:13px;color:var(--text-muted);">🎧 음원이 없어요</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">엄마 모드에서 YouTube URL을 설정해주세요</div>
+      </div>`;
+  }
+}
+
 function setReadingMode(mode){
   listeningMode=(mode==='listening');
   document.getElementById('mode-btn-read').className='mode-toggle-btn'+(listeningMode?'':' active-read');
@@ -1036,6 +1084,14 @@ function setReadingMode(mode){
   const btn=document.getElementById('reading-complete-btn');
   if(btn.style.display!=='none')
     btn.textContent=listeningMode?'✅ 듣기 완료! (+20 XP)':'✅ 읽기 완료! (+25 XP)';
+  // 🎧 모드: 플레이어 표시 / 📖 모드: 플레이어 숨김 + 오디오 정지
+  const playerDiv=document.getElementById('youtube-player');
+  if(listeningMode) {
+    renderYouTubePlayer();
+  } else {
+    playerDiv.style.display='none';
+    playerDiv.innerHTML='';
+  }
 }
 
 function updateReading() {
@@ -1046,6 +1102,8 @@ function updateReading() {
   document.getElementById('mode-btn-listen').className='mode-toggle-btn';
   document.getElementById('timerRingProgress').classList.remove('listening-mode');
   document.getElementById('timer-display').classList.remove('listening-mode');
+  document.getElementById('youtube-player').style.display='none';
+  document.getElementById('youtube-player').innerHTML='';
   document.getElementById('reading-book-title').textContent = state.settings.bookTitle||'Big Nate';
   document.getElementById('reading-chapter-info').textContent = state.settings.chapter||'';
   if (state.todayReading) {
@@ -1367,6 +1425,7 @@ function updateMomMode(){
   document.getElementById('mom-book-title').value=state.settings.bookTitle||'';
   document.getElementById('mom-chapter').value=state.settings.chapter||'';
   document.getElementById('mom-total-pages').value=state.settings.bookTotalPages||'';
+  document.getElementById('mom-audio-url').value=state.settings.audioUrl||'';
   renderMomWordList(); renderMomUnknownWords(); renderMomSubmissions(); renderMomReadingLog();
 }
 function renderMomSubmissions(){
@@ -1414,6 +1473,7 @@ function saveBookSettings(){
   state.settings.bookTitle=document.getElementById('mom-book-title').value;
   state.settings.chapter=document.getElementById('mom-chapter').value;
   state.settings.bookTotalPages=parseInt(document.getElementById('mom-total-pages').value)||0;
+  state.settings.audioUrl=document.getElementById('mom-audio-url').value.trim();
   saveState(state); alert('저장됐어요! ✅');
 }
 function addWord(){
