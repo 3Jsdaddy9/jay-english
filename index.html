@@ -1064,13 +1064,34 @@ function renderYouTubePlayer() {
     playerDiv.style.display='block';
     playerDiv.innerHTML=`<a href="${url}" target="_blank" class="btn btn-primary" style="text-decoration:none;display:flex;">🎧 음원 재생하기 (새 탭)</a>`;
   } else {
+    // URL 미설정: 자동 검색 + 인라인 URL 입력
+    state=getState();
+    const bookTitle=encodeURIComponent((state.settings.bookTitle||'Nate the Great')+' read aloud audiobook');
+    const ytSearchUrl=`https://www.youtube.com/results?search_query=${bookTitle}`;
     playerDiv.style.display='block';
     playerDiv.innerHTML=`
-      <div style="text-align:center;padding:16px;background:var(--surface);border-radius:12px;border:1px dashed var(--border);">
-        <div style="font-size:13px;color:var(--text-muted);">🎧 음원이 없어요</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">엄마 모드에서 YouTube URL을 설정해주세요</div>
+      <div class="card" style="padding:14px;">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px;">🎧 오디오북 음원 설정</div>
+        <a href="${ytSearchUrl}" target="_blank" class="btn btn-primary" style="text-decoration:none;display:flex;margin-bottom:12px;">
+          🔍 YouTube에서 자동 검색
+        </a>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">
+          영상 찾으면 URL 복사 후 아래 붙여넣기:
+        </div>
+        <input id="inline-audio-url" class="mom-input" type="url"
+          placeholder="https://youtube.com/watch?v=..."
+          style="margin-bottom:8px;">
+        <button class="btn btn-accent" onclick="saveInlineAudioUrl()">✅ 저장하고 재생!</button>
       </div>`;
   }
+}
+function saveInlineAudioUrl(){
+  const url=document.getElementById('inline-audio-url').value.trim();
+  if(!url){alert('URL을 입력해줘!');return;}
+  state=getState();
+  state.settings.audioUrl=url;
+  saveState(state);
+  renderYouTubePlayer();
 }
 
 function setReadingMode(mode){
