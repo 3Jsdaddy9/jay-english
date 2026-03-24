@@ -849,7 +849,13 @@ function getState() {
   try {
     const s = JSON.parse(localStorage.getItem('jayState') || '{}');
     const d = defaultState();
-    return { ...d, ...s, settings:{ ...d.settings, ...(s.settings||{}) }, missionSubmissions: s.missionSubmissions || [], readingLog: s.readingLog || [], todayListening: s.todayListening || false };
+    const merged = { ...d, ...s, settings:{ ...d.settings, ...(s.settings||{}) }, missionSubmissions: s.missionSubmissions || [], readingLog: s.readingLog || [], todayListening: s.todayListening || false };
+    // 마이그레이션: 이전 책 제목 자동 업데이트
+    if (merged.settings.bookTitle === 'Big Nate') {
+      merged.settings.bookTitle = 'Nate the Great Lost List';
+      localStorage.setItem('jayState', JSON.stringify(merged));
+    }
+    return merged;
   } catch { return defaultState(); }
 }
 function saveState(s) { localStorage.setItem('jayState', JSON.stringify(s)); }
