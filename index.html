@@ -643,6 +643,12 @@
           <input class="mom-input" id="page-end" type="number" min="1" placeholder="예: 15" style="margin-bottom:0;">
         </div>
       </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px;background:var(--surface);border-radius:10px;">
+        <input type="checkbox" id="is-reread" style="width:20px;height:20px;accent-color:var(--accent);cursor:pointer;">
+        <label for="is-reread" style="font-size:14px;color:var(--text);cursor:pointer;">
+          📚 이미 읽은 부분 다시 읽기 (재독) <span style="color:var(--accent);font-weight:700;">+15 XP!</span>
+        </label>
+      </div>
       <button class="btn btn-accent" onclick="submitReadingLog()">📝 기록하기!</button>
     </div>
   </div>
@@ -1094,9 +1100,11 @@ function completeReading() {
   const xpAmt=listeningMode?20:25;
   const xpLabel=listeningMode?'듣기+읽기 완료! 🎧':'읽기 완료! 📖';
   addXp(xpAmt,xpLabel);
-  // 페이지 기록 폼 표시 + 시작 페이지 자동 채우기
+  // 페이지 기록 폼 표시 + 초기화
   const lastEnd=getLastReadPage();
   if(lastEnd>0) document.getElementById('page-start').value=lastEnd+1;
+  document.getElementById('page-end').value='';
+  document.getElementById('is-reread').checked=false;
   document.getElementById('reading-log-form').style.display='block';
 }
 function getLastReadPage(){
