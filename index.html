@@ -407,6 +407,16 @@
       0%,100% { transform: translateY(0); }
       50%      { transform: translateY(-8px); }
     }
+    /* Listening mode */
+    .timer-ring-progress.listening-mode { stroke: var(--primary); }
+    .timer-display.listening-mode { color: var(--primary); }
+    .mode-toggle-btn {
+      flex:1; padding:10px 8px; border:2px solid var(--border);
+      border-radius:12px; background:var(--card); color:var(--text-muted);
+      font-size:14px; font-weight:600; cursor:pointer; transition:all 0.15s;
+    }
+    .mode-toggle-btn.active-read  { border-color:var(--accent);  background:rgba(255,215,0,0.1);  color:var(--accent);  }
+    .mode-toggle-btn.active-listen{ border-color:var(--primary); background:rgba(108,99,255,0.1); color:var(--primary); }
   </style>
 </head>
 <body>
@@ -497,7 +507,7 @@
     </div>
     <div class="activity-row" onclick="navigate('reading')">
       <div style="display:flex;align-items:center;gap:12px;">
-        <span style="font-size:24px;">📖</span>
+        <span style="font-size:24px;" id="home-reading-icon">📖</span>
         <div>
           <div style="font-weight:600;">읽기</div>
           <div style="font-size:12px;color:var(--text-muted)">15분 타이머 +25 XP</div>
@@ -586,6 +596,11 @@
 <!-- ===== READING ===== -->
 <div class="screen" id="screen-reading">
   <div class="section-title">📖 읽기 타이머</div>
+
+  <div style="display:flex;gap:8px;margin-bottom:16px;">
+    <button class="mode-toggle-btn active-read" id="mode-btn-read" onclick="setReadingMode('reading')">📖 읽기</button>
+    <button class="mode-toggle-btn" id="mode-btn-listen" onclick="setReadingMode('listening')">🎧 듣기+읽기</button>
+  </div>
 
   <div class="card" style="background:linear-gradient(135deg,#1a1a3e,#252550);">
     <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">오늘 읽을 책</div>
@@ -810,7 +825,7 @@ const MISSIONS = [
 function defaultState() {
   return {
     xp:0, streak:0, lastDate:null,
-    todayXp:0, todayWordScout:false, todayReading:false, todayMission:false,
+    todayXp:0, todayWordScout:false, todayReading:false, todayListening:false, todayMission:false,
     totalWords:0, totalSessions:0,
     history:[], unknownWords:[],
     missionSubmissions:[],
@@ -822,7 +837,7 @@ function getState() {
   try {
     const s = JSON.parse(localStorage.getItem('jayState') || '{}');
     const d = defaultState();
-    return { ...d, ...s, settings:{ ...d.settings, ...(s.settings||{}) }, missionSubmissions: s.missionSubmissions || [], readingLog: s.readingLog || [] };
+    return { ...d, ...s, settings:{ ...d.settings, ...(s.settings||{}) }, missionSubmissions: s.missionSubmissions || [], readingLog: s.readingLog || [], todayListening: s.todayListening || false };
   } catch { return defaultState(); }
 }
 function saveState(s) { localStorage.setItem('jayState', JSON.stringify(s)); }
@@ -846,7 +861,7 @@ function checkDailyReset() {
     state.streak = (state.lastDate === yesterday.toDateString()) ? (state.streak||0)+1 : 1;
   }
   state.todayXp=0; state.todayWordScout=false; state.todayReading=false;
-  state.todayMission=false; state.unknownWords=[]; state.lastDate=today;
+  state.todayListening=false; state.todayMission=false; state.unknownWords=[]; state.lastDate=today;
   saveState(state);
 }
 
@@ -923,6 +938,7 @@ function updateHome() {
   setCheck('check-wordscout', state.todayWordScout);
   setCheck('check-reading',   state.todayReading);
   setCheck('check-mission',   state.todayMission);
+  document.getElementById('home-reading-icon').textContent=state.todayListening?'🎧':'📖';
 }
 function setCheck(id, done) {
   const el=document.getElementById(id);
@@ -1001,9 +1017,29 @@ function wsRestart() {
 // ──────────────────────────────────────────
 let timerInterval=null, timerSec=900, timerRunning=false;
 const TIMER_TOTAL=900;
+let listeningMode=false;
+
+function setReadingMode(mode){
+  listeningMode=(mode==='listening');
+  document.getElementById('mode-btn-read').className='mode-toggle-btn'+(listeningMode?'':' active-read');
+  document.getElementById('mode-btn-listen').className='mode-toggle-btn'+(listeningMode?' active-listen':'');
+  const ring=document.getElementById('timerRingProgress');
+  const disp=document.getElementById('timer-display');
+  if(listeningMode){ring.classList.add('listening-mode');disp.classList.add('listening-mode');}
+  else{ring.classList.remove('listening-mode');disp.classList.remove('listening-mode');}
+  const btn=document.getElementById('reading-complete-btn');
+  if(btn.style.display!=='none')
+    btn.textContent=listeningMode?'✅ 듣기 완료! (+20 XP)':'✅ 읽기 완료! (+25 XP)';
+}
 
 function updateReading() {
   state=getState();
+  // 화면 진입 시 모드 초기화
+  listeningMode=false;
+  document.getElementById('mode-btn-read').className='mode-toggle-btn active-read';
+  document.getElementById('mode-btn-listen').className='mode-toggle-btn';
+  document.getElementById('timerRingProgress').classList.remove('listening-mode');
+  document.getElementById('timer-display').classList.remove('listening-mode');
   document.getElementById('reading-book-title').textContent = state.settings.bookTitle||'Big Nate';
   document.getElementById('reading-chapter-info').textContent = state.settings.chapter||'';
   if (state.todayReading) {
@@ -1026,7 +1062,9 @@ function timerToggle() {
       if (timerSec<=0) {
         clearInterval(timerInterval); timerRunning=false; timerSec=0;
         document.getElementById('timer-start-btn').innerHTML='⏱ 완료!';
-        document.getElementById('reading-complete-btn').style.display='block';
+        const completeBtn=document.getElementById('reading-complete-btn');
+        completeBtn.textContent=listeningMode?'✅ 듣기 완료! (+20 XP)':'✅ 읽기 완료! (+25 XP)';
+        completeBtn.style.display='block';
         updateTimerDisplay();
       }
     },1000);
@@ -1047,11 +1085,15 @@ function updateTimerDisplay() {
 }
 function completeReading() {
   if (state.todayReading) return;
-  state.todayReading=true; state.totalSessions=(state.totalSessions||0)+1; saveState(state);
+  state.todayReading=true;
+  if(listeningMode) state.todayListening=true;
+  state.totalSessions=(state.totalSessions||0)+1; saveState(state);
   document.getElementById('reading-complete-btn').style.display='none';
   document.getElementById('timer-start-btn').textContent='✅ 완료됨';
   document.getElementById('timer-start-btn').disabled=true;
-  addXp(25,'읽기 완료! 📖');
+  const xpAmt=listeningMode?20:25;
+  const xpLabel=listeningMode?'듣기+읽기 완료! 🎧':'읽기 완료! 📖';
+  addXp(xpAmt,xpLabel);
   // 페이지 기록 폼 표시 + 시작 페이지 자동 채우기
   const lastEnd=getLastReadPage();
   if(lastEnd>0) document.getElementById('page-start').value=lastEnd+1;
@@ -1076,7 +1118,7 @@ function submitReadingLog(){
     bookTitle:state.settings.bookTitle||'',
     startPage:startPage,
     endPage:endPage,
-    mode:'reading',
+    mode:listeningMode?'listening':'reading',
     isReread:isReread
   };
   state.readingLog=state.readingLog||[];
