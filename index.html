@@ -746,7 +746,7 @@
   <div class="card">
     <div style="font-size:15px;font-weight:700;margin-bottom:16px;">📖 오늘 읽을 책</div>
     <label class="mom-label">책 제목</label>
-    <input class="mom-input" id="mom-book-title" placeholder="예: Big Nate" type="text">
+    <input class="mom-input" id="mom-book-title" placeholder="예: Nate the Great Lost List" type="text">
     <label class="mom-label">챕터 / 페이지</label>
     <input class="mom-input" id="mom-chapter" placeholder="예: Chapter 3 (p.24~36)" type="text">
     <label class="mom-label">책 총 페이지 수</label>
@@ -842,7 +842,7 @@ function defaultState() {
     history:[], unknownWords:[],
     missionSubmissions:[],
     readingLog:[],
-    settings:{ pin:'1234', bookTitle:'Big Nate', chapter:'', bookTotalPages:0, audioUrl:'' }
+    settings:{ pin:'1234', bookTitle:'Nate the Great Lost List', chapter:'', bookTotalPages:0, audioUrl:'' }
   };
 }
 function getState() {
@@ -943,7 +943,7 @@ function updateHome() {
   document.getElementById('home-next-xp').textContent = ni.minXp;
   document.getElementById('streak-count').textContent = state.streak||0;
   document.getElementById('today-xp-display').textContent = state.todayXp||0;
-  document.getElementById('today-book-info').textContent = state.settings.bookTitle||'Big Nate';
+  document.getElementById('today-book-info').textContent = state.settings.bookTitle||'Nate the Great Lost List';
   const h = new Date().getHours();
   document.getElementById('greeting-text').textContent =
     h<12?'좋은 아침이야, Jay! ☀️': h<18?'안녕, Jay! 🌤️':'저녁이야, Jay! 🌙';
@@ -1066,7 +1066,7 @@ function renderYouTubePlayer() {
   } else {
     // URL 미설정: 자동 검색 + 인라인 URL 입력
     state=getState();
-    const bookTitle=encodeURIComponent((state.settings.bookTitle||'Nate the Great')+' read aloud audiobook');
+    const bookTitle=encodeURIComponent((state.settings.bookTitle||'Nate the Great Lost List')+' read aloud audiobook');
     const ytSearchUrl=`https://www.youtube.com/results?search_query=${bookTitle}`;
     playerDiv.style.display='block';
     playerDiv.innerHTML=`
@@ -1125,7 +1125,7 @@ function updateReading() {
   document.getElementById('timer-display').classList.remove('listening-mode');
   document.getElementById('youtube-player').style.display='none';
   document.getElementById('youtube-player').innerHTML='';
-  document.getElementById('reading-book-title').textContent = state.settings.bookTitle||'Big Nate';
+  document.getElementById('reading-book-title').textContent = state.settings.bookTitle||'Nate the Great Lost List';
   document.getElementById('reading-chapter-info').textContent = state.settings.chapter||'';
   if (state.todayReading) {
     document.getElementById('timer-start-btn').textContent='✅ 완료됨';
