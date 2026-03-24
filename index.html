@@ -615,6 +615,23 @@
     ✅ 읽기 완료! (+25 XP)
   </button>
 
+  <div id="reading-log-form" style="display:none;margin-top:16px;">
+    <div class="card" style="padding:16px;">
+      <div style="font-size:15px;font-weight:700;margin-bottom:12px;">📄 오늘 읽은 페이지 기록</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div>
+          <label class="mom-label">시작 페이지</label>
+          <input class="mom-input" id="page-start" type="number" min="1" placeholder="예: 1" style="margin-bottom:0;">
+        </div>
+        <div>
+          <label class="mom-label">끝 페이지</label>
+          <input class="mom-input" id="page-end" type="number" min="1" placeholder="예: 15" style="margin-bottom:0;">
+        </div>
+      </div>
+      <button class="btn btn-accent" onclick="submitReadingLog()">📝 기록하기!</button>
+    </div>
+  </div>
+
   <div id="unknown-words-section" style="display:none;margin-top:8px;">
     <div style="font-size:13px;font-weight:700;color:var(--text-muted);margin-bottom:8px;">📝 모른 단어 메모</div>
     <div id="unknown-words-list"></div>
@@ -650,6 +667,18 @@
     <div style="font-size:14px;color:rgba(255,255,255,0.8);margin:8px 0;" id="trophy-xp-text">0 / 200 XP</div>
     <div class="xp-bar-bg" style="background:rgba(0,0,0,0.25);">
       <div class="xp-bar-fill" id="trophy-xp-bar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="card" id="book-progress-card" style="margin-bottom:16px;">
+    <div style="font-size:15px;font-weight:700;margin-bottom:10px;">📚 책 진행률</div>
+    <div style="font-size:14px;color:var(--text-muted);margin-bottom:6px;" id="book-progress-title">-</div>
+    <div class="xp-bar-bg" style="margin-bottom:6px;">
+      <div class="xp-bar-fill" id="book-progress-bar" style="width:0%;background:linear-gradient(90deg,#4ade80,#22d3ee);"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);">
+      <span id="book-progress-pages">0 / ? 페이지</span>
+      <span id="book-progress-pct">0%</span>
     </div>
   </div>
 
@@ -696,6 +725,8 @@
     <input class="mom-input" id="mom-book-title" placeholder="예: Big Nate" type="text">
     <label class="mom-label">챕터 / 페이지</label>
     <input class="mom-input" id="mom-chapter" placeholder="예: Chapter 3 (p.24~36)" type="text">
+    <label class="mom-label">책 총 페이지 수</label>
+    <input class="mom-input" id="mom-total-pages" placeholder="예: 80" type="number" min="1">
     <button class="btn btn-primary" onclick="saveBookSettings()">💾 저장</button>
   </div>
 
@@ -716,6 +747,11 @@
   <div class="card">
     <div style="font-size:15px;font-weight:700;margin-bottom:16px;">📬 Jay의 미션 답변</div>
     <div id="mom-submissions"><div style="font-size:13px;color:var(--text-muted)">아직 제출된 답변이 없어요</div></div>
+  </div>
+
+  <div class="card">
+    <div style="font-size:15px;font-weight:700;margin-bottom:12px;">📚 읽기 기록</div>
+    <div id="mom-reading-log"></div>
   </div>
 
   <div class="card">
@@ -778,14 +814,15 @@ function defaultState() {
     totalWords:0, totalSessions:0,
     history:[], unknownWords:[],
     missionSubmissions:[],
-    settings:{ pin:'1234', bookTitle:'Big Nate', chapter:'' }
+    readingLog:[],
+    settings:{ pin:'1234', bookTitle:'Big Nate', chapter:'', bookTotalPages:0 }
   };
 }
 function getState() {
   try {
     const s = JSON.parse(localStorage.getItem('jayState') || '{}');
     const d = defaultState();
-    return { ...d, ...s, settings:{ ...d.settings, ...(s.settings||{}) }, missionSubmissions: s.missionSubmissions || [] };
+    return { ...d, ...s, settings:{ ...d.settings, ...(s.settings||{}) }, missionSubmissions: s.missionSubmissions || [], readingLog: s.readingLog || [] };
   } catch { return defaultState(); }
 }
 function saveState(s) { localStorage.setItem('jayState', JSON.stringify(s)); }
@@ -1015,6 +1052,57 @@ function completeReading() {
   document.getElementById('timer-start-btn').textContent='✅ 완료됨';
   document.getElementById('timer-start-btn').disabled=true;
   addXp(25,'읽기 완료! 📖');
+  // 페이지 기록 폼 표시 + 시작 페이지 자동 채우기
+  const lastEnd=getLastReadPage();
+  if(lastEnd>0) document.getElementById('page-start').value=lastEnd+1;
+  document.getElementById('reading-log-form').style.display='block';
+}
+function getLastReadPage(){
+  state=getState();
+  const logs=(state.readingLog||[]).filter(l=>l.bookTitle===state.settings.bookTitle);
+  if(!logs.length) return 0;
+  return Math.max(...logs.map(l=>l.endPage||0));
+}
+function submitReadingLog(){
+  state=getState();
+  const startPage=parseInt(document.getElementById('page-start').value)||0;
+  const endPage=parseInt(document.getElementById('page-end').value)||0;
+  if(endPage<=0){alert('끝 페이지를 입력해줘!');return;}
+  if(startPage>0&&endPage<startPage){alert('끝 페이지가 시작 페이지보다 커야 해!');return;}
+  const isReread=document.getElementById('is-reread')
+    ?document.getElementById('is-reread').checked:false;
+  const entry={
+    date:new Date().toDateString(),
+    bookTitle:state.settings.bookTitle||'',
+    startPage:startPage,
+    endPage:endPage,
+    mode:'reading',
+    isReread:isReread
+  };
+  state.readingLog=state.readingLog||[];
+  state.readingLog.push(entry);
+  saveState(state);
+  document.getElementById('reading-log-form').style.display='none';
+  if(isReread) setTimeout(()=>addXp(15,'재독 완료! 📚'),400);
+  checkMilestone(endPage);
+}
+function checkMilestone(currentPage){
+  state=getState();
+  const total=state.settings.bookTotalPages||0;
+  if(!total||total<=0) return;
+  const prevLogs=(state.readingLog||[]).slice(0,-1);
+  const prevMax=prevLogs.length?Math.max(...prevLogs.filter(l=>l.bookTitle===state.settings.bookTitle).map(l=>l.endPage||0),0):0;
+  const pct=Math.floor((currentPage/total)*100);
+  const prevPct=Math.floor((prevMax/total)*100);
+  const milestones=[
+    {pct:25,xp:20,msg:'25% 완독! 🎉'},
+    {pct:50,xp:30,msg:'절반 돌파! 🚀'},
+    {pct:75,xp:40,msg:'75% 완독! ⚡'},
+    {pct:100,xp:100,msg:'완독 달성!! 🏆'}
+  ];
+  milestones.forEach(m=>{
+    if(prevPct<m.pct&&pct>=m.pct) setTimeout(()=>addXp(m.xp,m.msg),800);
+  });
 }
 function reportUnknownWord() {
   const word=prompt('모르는 단어가 뭐야? (영어로 적어봐)');
@@ -1186,6 +1274,15 @@ function updateTrophy() {
     d.className='cal-day'+(isDone?' done':'')+(isToday?' today':'');
     d.textContent=i; grid.appendChild(d);
   }
+  // 책 진행 바
+  const totalPages=state.settings.bookTotalPages||0;
+  const bookLogs=(state.readingLog||[]).filter(l=>l.bookTitle===state.settings.bookTitle);
+  const currentPage=bookLogs.length?Math.max(...bookLogs.map(l=>l.endPage||0)):0;
+  const bookPct=totalPages>0?Math.min(Math.round((currentPage/totalPages)*100),100):0;
+  document.getElementById('book-progress-title').textContent=state.settings.bookTitle||'책';
+  document.getElementById('book-progress-bar').style.width=bookPct+'%';
+  document.getElementById('book-progress-pages').textContent=currentPage+' / '+(totalPages||'?')+' 페이지';
+  document.getElementById('book-progress-pct').textContent=bookPct+'%';
 }
 
 // ──────────────────────────────────────────
@@ -1219,7 +1316,8 @@ function updateMomMode(){
   state=getState();
   document.getElementById('mom-book-title').value=state.settings.bookTitle||'';
   document.getElementById('mom-chapter').value=state.settings.chapter||'';
-  renderMomWordList(); renderMomUnknownWords(); renderMomSubmissions();
+  document.getElementById('mom-total-pages').value=state.settings.bookTotalPages||'';
+  renderMomWordList(); renderMomUnknownWords(); renderMomSubmissions(); renderMomReadingLog();
 }
 function renderMomSubmissions(){
   state=getState();
@@ -1265,6 +1363,7 @@ function approveMission(subId){
 function saveBookSettings(){
   state.settings.bookTitle=document.getElementById('mom-book-title').value;
   state.settings.chapter=document.getElementById('mom-chapter').value;
+  state.settings.bookTotalPages=parseInt(document.getElementById('mom-total-pages').value)||0;
   saveState(state); alert('저장됐어요! ✅');
 }
 function addWord(){
@@ -1295,6 +1394,31 @@ function renderMomUnknownWords(){
   const el=document.getElementById('mom-unknown-words');
   if(!words.length){el.innerHTML='<div style="font-size:13px;color:var(--text-muted)">아직 없어요</div>';return;}
   el.innerHTML=words.map(w=>`<div style="background:var(--surface);border-radius:10px;padding:10px 12px;margin-bottom:8px;border:1px solid var(--border);font-size:15px;font-weight:600;">❓ ${w.word}</div>`).join('');
+}
+function renderMomReadingLog(){
+  state=getState();
+  const el=document.getElementById('mom-reading-log');
+  if(!el) return;
+  const logs=(state.readingLog||[])
+    .filter(l=>l.bookTitle===state.settings.bookTitle)
+    .slice().reverse().slice(0,7);
+  if(!logs.length){el.innerHTML='<div style="font-size:13px;color:var(--text-muted)">아직 기록이 없어요</div>';return;}
+  const totalPages=state.settings.bookTotalPages||0;
+  const currentPage=Math.max(...logs.map(l=>l.endPage||0));
+  el.innerHTML=`
+    <div style="font-size:13px;color:var(--accent);font-weight:600;margin-bottom:10px;">
+      현재 위치: ${currentPage}p${totalPages?' / '+totalPages+'p ('+Math.round(currentPage/totalPages*100)+'%)':''}
+    </div>
+    ${logs.map(l=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
+        <span style="color:var(--text-muted);">${l.date||''}</span>
+        <span>${l.startPage||'?'}p → ${l.endPage||'?'}p
+          ${l.isReread?'<span style="color:var(--accent);font-size:11px;margin-left:4px;background:rgba(255,215,0,0.1);padding:1px 6px;border-radius:8px;">재독</span>':''}
+          ${l.mode==='listening'?'<span style="font-size:13px;margin-left:4px;">🎧</span>':''}
+        </span>
+      </div>
+    `).join('')}
+  `;
 }
 function changePin(){
   const p=document.getElementById('new-pin').value;
