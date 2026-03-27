@@ -407,6 +407,36 @@
       0%,100% { transform: translateY(0); }
       50%      { transform: translateY(-8px); }
     }
+    /* ── QUEST STEPS ── */
+    .quest-steps { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    .quest-step {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--card); border: 2px solid var(--border);
+      border-radius: 16px; padding: 16px;
+      cursor: pointer; transition: border-color 0.2s, transform 0.1s, opacity 0.2s;
+      position: relative;
+    }
+    .quest-step:active { transform: scale(0.98); }
+    .quest-step.active-step { border-color: var(--primary); background: rgba(108,99,255,0.1); }
+    .quest-step.done-step  { border-color: var(--success); background: rgba(74,222,128,0.07); opacity: 0.75; }
+    .quest-step.locked-step { opacity: 0.45; cursor: not-allowed; }
+    .step-icon { font-size: 36px; flex-shrink: 0; }
+    .step-body { flex: 1; }
+    .step-title { font-size: 15px; font-weight: 700; }
+    .step-desc  { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .step-badge {
+      font-size: 11px; font-weight: 700; padding: 3px 10px;
+      border-radius: 100px; flex-shrink: 0;
+    }
+    .badge-todo   { background: rgba(108,99,255,0.15); color: var(--primary); }
+    .badge-done   { background: rgba(74,222,128,0.2);  color: var(--success); }
+    .badge-locked { background: var(--border); color: var(--text-muted); }
+    .badge-xp     { background: rgba(255,215,0,0.15);  color: var(--accent); }
+    /* Connector line between steps */
+    .step-connector {
+      width: 2px; height: 10px; background: var(--border);
+      margin: 0 auto; margin-left: 34px;
+    }
     /* Listening mode */
     .timer-ring-progress.listening-mode { stroke: var(--primary); }
     .timer-display.listening-mode { color: var(--primary); }
@@ -467,84 +497,71 @@
 
 <!-- ===== HOME ===== -->
 <div class="screen active" id="screen-home">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
     <div>
       <div style="font-size:13px;color:var(--text-muted);" id="greeting-text">안녕, Jay!</div>
-      <div style="font-size:26px;font-weight:800;">오늘도 퀘스트! ⚔️</div>
+      <div style="font-size:24px;font-weight:800;">오늘의 영어 퀘스트 ⚔️</div>
     </div>
-    <div class="streak-badge">🔥 <span id="streak-count">0</span>일 연속</div>
+    <div class="streak-badge">🔥 <span id="streak-count">0</span>일</div>
   </div>
 
   <!-- Level + XP -->
-  <div class="card" style="background:linear-gradient(135deg,#1a1a3e,#252550);margin-bottom:20px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+  <div class="card" style="background:linear-gradient(135deg,#1a1a3e,#252550);margin-bottom:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
       <div class="level-badge" id="home-level-badge">⚔️ Lv.1 Beginner</div>
-      <div style="font-size:15px;color:var(--accent);font-weight:700;"><span id="home-xp">0</span> XP</div>
+      <div style="font-size:14px;color:var(--accent);font-weight:700;"><span id="home-xp">0</span> XP</div>
     </div>
     <div class="xp-bar-bg">
       <div class="xp-bar-fill" id="home-xp-bar" style="width:0%"></div>
     </div>
-    <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--text-muted);">
-      <span>현재</span>
+    <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:11px;color:var(--text-muted);">
+      <span id="today-book-info">Nate the Great Lost List</span>
       <span>다음 레벨: <span id="home-next-xp">200</span> XP</span>
     </div>
   </div>
 
-  <!-- Today quests -->
-  <div class="card">
-    <div style="font-size:16px;font-weight:700;margin-bottom:2px;">📋 오늘의 퀘스트</div>
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;" id="today-book-info">Big Nate</div>
-
-    <div class="activity-row" onclick="navigate('wordscout')">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span style="font-size:24px;">⚔️</span>
-        <div>
-          <div style="font-weight:600;">Word Scout</div>
-          <div style="font-size:12px;color:var(--text-muted)">단어 미리 정찰 +20 XP</div>
-        </div>
-      </div>
-      <div class="activity-check check-pending" id="check-wordscout">○</div>
-    </div>
-    <div class="activity-row" onclick="navigate('reading')">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span style="font-size:24px;" id="home-reading-icon">📖</span>
-        <div>
-          <div style="font-weight:600;">읽기</div>
-          <div style="font-size:12px;color:var(--text-muted)">15분 타이머 +25 XP</div>
-        </div>
-      </div>
-      <div class="activity-check check-pending" id="check-reading">○</div>
-    </div>
-    <div class="activity-row" onclick="navigate('mission')">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span style="font-size:24px;">🎯</span>
-        <div>
-          <div style="font-weight:600;">미션 클리어</div>
-          <div style="font-size:12px;color:var(--text-muted)">특별 미션 +10~25 XP</div>
-        </div>
-      </div>
-      <div class="activity-check check-pending" id="check-mission">○</div>
-    </div>
+  <!-- Quest Steps -->
+  <div style="font-size:14px;font-weight:700;color:var(--text-muted);margin-bottom:10px;">📋 오늘의 학습 순서</div>
+  <div class="quest-steps" id="quest-steps-container">
+    <!-- JS로 렌더링 -->
   </div>
 
   <!-- Today XP -->
-  <div class="card" style="text-align:center;">
-    <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px;">오늘 획득한 XP</div>
-    <div style="font-size:44px;font-weight:800;color:var(--accent);" id="today-xp-display">0</div>
-    <div style="font-size:12px;color:var(--text-muted)">최대 70 XP 획득 가능</div>
+  <div class="card" style="text-align:center;padding:14px;">
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:2px;">오늘 획득한 XP</div>
+    <div style="font-size:40px;font-weight:800;color:var(--accent);" id="today-xp-display">0</div>
+  </div>
+</div>
+
+<!-- ===== LISTEN (STEP 2) ===== -->
+<div class="screen" id="screen-listen">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+    <button onclick="navigate('home')" style="background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;padding:0;">←</button>
+    <div class="section-title" style="margin:0;">🎧 듣기</div>
   </div>
 
-  <!-- Weekly Boss Battle -->
-  <a href="game.html" style="text-decoration:none;">
-    <div style="background:linear-gradient(135deg,#3d0000,#6b0000);border:2px solid var(--danger);border-radius:16px;padding:20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <div>
-        <div style="font-size:11px;color:var(--danger);font-weight:700;margin-bottom:4px;">WEEKLY</div>
-        <div style="font-size:18px;font-weight:800;">👹 주간 보스 배틀</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">이번 주 복습 퀴즈</div>
-      </div>
-      <div style="font-size:40px;">⚔️</div>
+  <div class="card" style="background:rgba(108,99,255,0.1);border-color:var(--primary);margin-bottom:16px;">
+    <div style="font-size:14px;color:var(--primary);font-weight:600;">🎧 듣기 미션</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-top:4px;line-height:1.6;">
+      오디오북을 <b>끝까지</b> 들어봐!<br>
+      모르는 단어가 나와도 괜찮아 — 그냥 쭉 들으면 돼 😊
     </div>
-  </a>
+  </div>
+
+  <div id="listen-player-area"></div>
+
+  <div id="listen-done-area" style="display:none;text-align:center;padding:30px 0;">
+    <div style="font-size:64px;margin-bottom:12px;">🎉</div>
+    <div style="font-size:20px;font-weight:800;margin-bottom:8px;">듣기 완료!</div>
+    <div style="font-size:14px;color:var(--text-muted);margin-bottom:24px;">이제 따라읽기 할 준비가 됐어!</div>
+    <button class="btn btn-primary" onclick="navigate('home')">🏠 홈으로</button>
+  </div>
+
+  <div id="listen-btn-area">
+    <button class="btn btn-success" style="margin-top:16px;" onclick="completeListen()">
+      ✅ 다 들었어요! (+15 XP)
+    </button>
+  </div>
 </div>
 
 <!-- ===== WORD SCOUT ===== -->
@@ -799,15 +816,6 @@
   <button class="nav-btn active" id="nav-home" onclick="navigate('home')">
     <span class="icon">🏠</span><span>홈</span>
   </button>
-  <button class="nav-btn" id="nav-wordscout" onclick="navigate('wordscout')">
-    <span class="icon">⚔️</span><span>단어</span>
-  </button>
-  <button class="nav-btn" id="nav-reading" onclick="navigate('reading')">
-    <span class="icon">📖</span><span>읽기</span>
-  </button>
-  <button class="nav-btn" id="nav-mission" onclick="navigate('mission')">
-    <span class="icon">🎯</span><span>미션</span>
-  </button>
   <button class="nav-btn" id="nav-trophy" onclick="navigate('trophy')">
     <span class="icon">🏆</span><span>트로피</span>
   </button>
@@ -837,7 +845,7 @@ const MISSIONS = [
 function defaultState() {
   return {
     xp:0, streak:0, lastDate:null,
-    todayXp:0, todayWordScout:false, todayReading:false, todayListening:false, todayMission:false,
+    todayXp:0, todayWordScout:false, todayListen:false, todayFollowRead:false, todayReading:false, todayMission:false, todayListening:false,
     totalWords:0, totalSessions:0,
     history:[], unknownWords:[],
     missionSubmissions:[],
@@ -849,7 +857,7 @@ function getState() {
   try {
     const s = JSON.parse(localStorage.getItem('jayState') || '{}');
     const d = defaultState();
-    const merged = { ...d, ...s, settings:{ ...d.settings, ...(s.settings||{}) }, missionSubmissions: s.missionSubmissions || [], readingLog: s.readingLog || [], todayListening: s.todayListening || false };
+    const merged = { ...d, ...s, settings:{ ...d.settings, ...(s.settings||{}) }, missionSubmissions: s.missionSubmissions || [], readingLog: s.readingLog || [], todayListening: s.todayListening || false, todayListen: s.todayListen || false, todayFollowRead: s.todayFollowRead || false };
     // 마이그레이션: 이전 책 제목 자동 업데이트
     if (merged.settings.bookTitle === 'Big Nate') {
       merged.settings.bookTitle = 'Nate the Great Lost List';
@@ -878,27 +886,66 @@ function checkDailyReset() {
     const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
     state.streak = (state.lastDate === yesterday.toDateString()) ? (state.streak||0)+1 : 1;
   }
-  state.todayXp=0; state.todayWordScout=false; state.todayReading=false;
-  state.todayListening=false; state.todayMission=false; state.unknownWords=[]; state.lastDate=today;
+  state.todayXp=0; state.todayWordScout=false; state.todayListen=false; state.todayFollowRead=false;
+  state.todayReading=false; state.todayListening=false; state.todayMission=false; state.unknownWords=[]; state.lastDate=today;
   saveState(state);
 }
 
 // ──────────────────────────────────────────
 // NAVIGATION
 // ──────────────────────────────────────────
-function navigate(screen) {
+// readingSubMode: 'follow' = 따라읽기(step3), 'solo' = 혼자읽기(step4)
+let readingSubMode = 'solo';
+
+function navigate(screen, opts) {
+  state = getState();
+
+  // 잠금 체크 (홈/트로피/엄마/미션은 자유)
+  const lockMap = {
+    'listen':     !state.todayWordScout,
+    'wordscout':  false,
+    'reading':    opts && opts.mode==='follow' ? !state.todayListen : !state.todayFollowRead,
+    'mission':    !state.todayReading,
+  };
+  if (lockMap[screen]) {
+    showLockedMsg(screen);
+    return;
+  }
+
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('screen-'+screen).classList.add('active');
   const nb = document.getElementById('nav-'+screen);
   if (nb) nb.classList.add('active');
+
   if (screen==='home')      { updateHome(); checkPendingRewards(); }
+  if (screen==='listen')    initListen();
   if (screen==='wordscout') initWordScout();
-  if (screen==='reading')   updateReading();
+  if (screen==='reading') {
+    readingSubMode = (opts && opts.mode==='follow') ? 'follow' : 'solo';
+    updateReading();
+    if (readingSubMode==='follow') setTimeout(()=>setReadingMode('listening'), 100);
+    else setTimeout(()=>setReadingMode('reading'), 100);
+  }
   if (screen==='mission')   updateMissions();
   if (screen==='trophy')    updateTrophy();
   if (screen==='mom')       updateMomMode();
   window.scrollTo(0,0);
+}
+
+function showLockedMsg(screen) {
+  const msgs = {
+    'listen':  '먼저 단어 카드를 봐줘! 🃏 (1단계)',
+    'reading': readingSubMode==='follow' ? '먼저 오디오북을 들어줘! 🎧 (2단계)' : '먼저 따라읽기를 해줘! 📖 (3단계)',
+    'mission': '먼저 혼자읽기를 완료해줘! ⏱️ (4단계)',
+  };
+  const msg = msgs[screen] || '이전 단계를 먼저 완료해줘! 🔒';
+  // 간단한 토스트
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:600;z-index:3000;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.4);';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(()=>toast.remove(), 2200);
 }
 
 // ──────────────────────────────────────────
@@ -938,6 +985,14 @@ function floatXp(amount) {
 // ──────────────────────────────────────────
 // HOME
 // ──────────────────────────────────────────
+const QUEST_STEPS = [
+  { key:'todayWordScout', icon:'🃏', title:'단어 미리보기',  desc:'오늘 나올 단어 카드 확인',    xp:'+20 XP', screen:'wordscout',          opts:null },
+  { key:'todayListen',    icon:'🎧', title:'오디오북 듣기',  desc:'눈 감고 끝까지 들어봐',       xp:'+15 XP', screen:'listen',             opts:null },
+  { key:'todayFollowRead',icon:'📖', title:'따라 읽기',      desc:'오디오 들으며 눈으로 따라가기', xp:'+20 XP', screen:'reading', opts:{mode:'follow'} },
+  { key:'todayReading',   icon:'⏱️', title:'혼자 읽기',      desc:'15분 타이머 — 혼자서!',        xp:'+25 XP', screen:'reading', opts:{mode:'solo'} },
+  { key:'todayMission',   icon:'⚔️', title:'보스 배틀',      desc:'퀴즈 맞혀서 보스 쓰러뜨리기', xp:'🔥 도전', screen:'boss',    opts:null },
+];
+
 function updateHome() {
   state = getState();
   const li = getLevelInfo(state.xp);
@@ -953,24 +1008,118 @@ function updateHome() {
   const h = new Date().getHours();
   document.getElementById('greeting-text').textContent =
     h<12?'좋은 아침이야, Jay! ☀️': h<18?'안녕, Jay! 🌤️':'저녁이야, Jay! 🌙';
-  setCheck('check-wordscout', state.todayWordScout);
-  setCheck('check-reading',   state.todayReading);
-  setCheck('check-mission',   state.todayMission);
-  document.getElementById('home-reading-icon').textContent=state.todayListening?'🎧':'📖';
+  renderQuestSteps();
 }
-function setCheck(id, done) {
-  const el=document.getElementById(id);
-  if (done==='pending') {
-    el.textContent='⏳';
-    el.className='activity-check';
-    el.style.background='rgba(255,200,0,0.15)';
-    el.style.color='#f0c000';
-    el.style.fontSize='16px';
-  } else {
-    el.style.background=''; el.style.color=''; el.style.fontSize='';
-    el.textContent=done?'✓':'○';
-    el.className='activity-check '+(done?'check-done':'check-pending');
+
+function renderQuestSteps() {
+  const container = document.getElementById('quest-steps-container');
+  container.innerHTML = '';
+  // 첫 번째 미완료 단계 = 현재 활성 단계
+  let foundActive = false;
+  QUEST_STEPS.forEach((step, i) => {
+    const done = !!state[step.key];
+    const prevDone = i===0 ? true : !!state[QUEST_STEPS[i-1].key];
+    const isActive = !done && prevDone && !foundActive;
+    const locked = !done && !prevDone;
+    if (isActive) foundActive = true;
+
+    // connector
+    if (i > 0) {
+      const conn = document.createElement('div');
+      conn.className = 'step-connector';
+      container.appendChild(conn);
+    }
+
+    const el = document.createElement('div');
+    el.className = 'quest-step ' + (done ? 'done-step' : isActive ? 'active-step' : locked ? 'locked-step' : '');
+
+    let badgeClass = done ? 'badge-done' : isActive ? 'badge-xp' : 'badge-locked';
+    let badgeText  = done ? '✓ 완료' : locked ? '🔒' : step.xp;
+
+    el.innerHTML = `
+      <div class="step-icon">${step.icon}</div>
+      <div class="step-body">
+        <div class="step-title">${i+1}단계. ${step.title}</div>
+        <div class="step-desc">${step.desc}</div>
+      </div>
+      <div class="step-badge ${badgeClass}">${badgeText}</div>
+    `;
+
+    if (!locked && !done || isActive) {
+      el.onclick = () => {
+        if (step.screen === 'boss') { window.location.href = 'game.html'; return; }
+        navigate(step.screen, step.opts);
+      };
+    } else if (locked) {
+      el.onclick = () => showLockedMsg(step.screen);
+    }
+
+    container.appendChild(el);
+  });
+
+  // 전체 완료 메시지
+  const allDone = QUEST_STEPS.every(s => !!state[s.key]);
+  if (allDone) {
+    const fin = document.createElement('div');
+    fin.style.cssText = 'text-align:center;padding:20px;';
+    fin.innerHTML = '<div style="font-size:48px;">🎊</div><div style="font-size:18px;font-weight:800;margin-top:8px;">오늘 퀘스트 완료!</div><div style="font-size:13px;color:var(--text-muted);margin-top:4px;">대단한 Jay! 내일 또 도전하자 💪</div>';
+    container.appendChild(fin);
   }
+}
+
+// ──────────────────────────────────────────
+// LISTEN (STEP 2)
+// ──────────────────────────────────────────
+function initListen() {
+  state = getState();
+  const playerArea = document.getElementById('listen-player-area');
+  const doneArea   = document.getElementById('listen-done-area');
+  const btnArea    = document.getElementById('listen-btn-area');
+
+  if (state.todayListen) {
+    playerArea.innerHTML = '';
+    doneArea.style.display = 'block';
+    btnArea.style.display  = 'none';
+    return;
+  }
+  doneArea.style.display = 'none';
+  btnArea.style.display  = 'block';
+
+  const url     = state.settings.audioUrl || '';
+  const videoId = extractYouTubeId(url);
+  if (videoId) {
+    playerArea.innerHTML = `
+      <div class="card" style="padding:10px;margin-bottom:8px;">
+        <div style="font-size:12px;color:var(--primary);font-weight:600;margin-bottom:8px;">🎧 오디오북</div>
+        <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:10px;">
+          <iframe src="https://www.youtube.com/embed/${videoId}?playsinline=1&rel=0&autoplay=0"
+            style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen loading="lazy"></iframe>
+        </div>
+      </div>`;
+  } else {
+    const bookTitle = encodeURIComponent((state.settings.bookTitle||'Nate the Great Lost List')+' read aloud audiobook');
+    playerArea.innerHTML = `
+      <div class="card" style="padding:14px;margin-bottom:8px;">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px;">오디오북 URL이 없어요</div>
+        <a href="https://www.youtube.com/results?search_query=${bookTitle}" target="_blank"
+          class="btn btn-primary" style="text-decoration:none;display:flex;margin-bottom:8px;">
+          🔍 YouTube에서 찾기
+        </a>
+        <div style="font-size:12px;color:var(--text-muted);">엄마한테 설정해달라고 말해줘!</div>
+      </div>`;
+  }
+}
+
+function completeListen() {
+  if (!state.todayListen) {
+    state.todayListen = true;
+    saveState(state);
+    addXp(15, '듣기 완료! 🎧');
+  }
+  document.getElementById('listen-done-area').style.display = 'block';
+  document.getElementById('listen-btn-area').style.display  = 'none';
 }
 
 // ──────────────────────────────────────────
@@ -1123,7 +1272,6 @@ function setReadingMode(mode){
 
 function updateReading() {
   state=getState();
-  // 화면 진입 시 모드 초기화
   listeningMode=false;
   document.getElementById('mode-btn-read').className='mode-toggle-btn active-read';
   document.getElementById('mode-btn-listen').className='mode-toggle-btn';
@@ -1131,12 +1279,23 @@ function updateReading() {
   document.getElementById('timer-display').classList.remove('listening-mode');
   document.getElementById('youtube-player').style.display='none';
   document.getElementById('youtube-player').innerHTML='';
+
+  // 모드 표시
+  const isFollow = readingSubMode === 'follow';
+  document.querySelector('#screen-reading .section-title') && (document.querySelector('#screen-reading .section-title').textContent = isFollow ? '📖 따라 읽기' : '⏱️ 혼자 읽기');
   document.getElementById('reading-book-title').textContent = state.settings.bookTitle||'Nate the Great Lost List';
-  document.getElementById('reading-chapter-info').textContent = state.settings.chapter||'';
-  if (state.todayReading) {
-    document.getElementById('timer-start-btn').textContent='✅ 완료됨';
-    document.getElementById('timer-start-btn').disabled=true;
+  document.getElementById('reading-chapter-info').textContent = isFollow ? '오디오 들으면서 눈으로 따라가기 👀' : (state.settings.chapter||'');
+
+  // 완료 여부
+  const alreadyDone = isFollow ? state.todayFollowRead : state.todayReading;
+  const startBtn = document.getElementById('timer-start-btn');
+  if (alreadyDone) {
+    startBtn.textContent='✅ 완료됨'; startBtn.disabled=true;
     document.getElementById('reading-complete-btn').style.display='none';
+  } else {
+    startBtn.textContent='▶ 시작'; startBtn.disabled=false;
+    timerSec=900; timerRunning=false;
+    updateTimerDisplay();
   }
   updateUnknownDisplay();
 }
@@ -1175,6 +1334,20 @@ function updateTimerDisplay() {
   document.getElementById('timerRingProgress').style.strokeDashoffset=offset;
 }
 function completeReading() {
+  // 따라읽기(step3) vs 혼자읽기(step4) 분기
+  if (readingSubMode === 'follow') {
+    if (state.todayFollowRead) return;
+    state.todayFollowRead = true;
+    if(listeningMode) state.todayListening = true;
+    state.totalSessions=(state.totalSessions||0)+1; saveState(state);
+    document.getElementById('reading-complete-btn').style.display='none';
+    document.getElementById('timer-start-btn').textContent='✅ 완료됨';
+    document.getElementById('timer-start-btn').disabled=true;
+    addXp(20,'따라읽기 완료! 📖');
+    document.getElementById('reading-log-form').style.display='none';
+    setTimeout(()=>navigate('home'), 1200);
+    return;
+  }
   if (state.todayReading) return;
   state.todayReading=true;
   if(listeningMode) state.todayListening=true;
