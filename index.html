@@ -672,8 +672,8 @@
     <div style="font-size:14px;color:var(--success);font-weight:600;">📖 따라 읽기 미션</div>
     <div style="font-size:13px;color:var(--text-muted);margin-top:4px;line-height:1.8;">
       🔊 버튼으로 문장을 들어봐 → 큰 소리로 따라 읽기!<br>
-      다 읽으면 <b>다음 문장 →</b> 버튼을 눌러봐 😊<br>
-      문장이 없으면 오디오 들으면서 눈으로 따라가기!
+      문장을 끝까지 읽고 ✅ 버튼을 눌러봐 😊<br>
+      <b style="color:var(--accent)">⏱ 10분 이상 + 문장 완주</b>하면 완료 버튼이 나타나!
     </div>
   </div>
 
@@ -892,6 +892,11 @@
   </div>
 
   <div class="card">
+    <div style="font-size:15px;font-weight:700;margin-bottom:12px;">📖 따라읽기 완료 기록</div>
+    <div id="mom-follow-read-log"></div>
+  </div>
+
+  <div class="card">
     <div style="font-size:15px;font-weight:700;margin-bottom:12px;">⚠️ Jay가 어려워하는 단어</div>
     <div id="mom-hard-words"></div>
   </div>
@@ -1074,12 +1079,16 @@ function checkDailyReset() {
 let readingSubMode = 'solo';
 
 // ── 따라읽기 문장 네비게이션 ──
+const FOLLOW_UNLOCK_SECS = 600; // 10분 = 완료 버튼 잠금해제 최소 경과시간
 let currentSentences = [];
 let sentIdx = 0;
+let allSentsRead = false;
+let followElapsedSecs = 0; // 실제 경과 시간 추적
 
 function initSentNav(sents) {
   currentSentences = sents;
   sentIdx = 0;
+  allSentsRead = sents.length === 0; // 문장 없으면 처음부터 true
   renderSentNav();
 }
 
@@ -1088,18 +1097,49 @@ function renderSentNav() {
   document.getElementById('sent-progress').textContent = `${sentIdx + 1} / ${total}`;
   document.getElementById('sent-text').textContent = currentSentences[sentIdx] || '';
   document.getElementById('sent-prev-btn').disabled = sentIdx === 0;
-  document.getElementById('sent-next-btn').disabled = sentIdx === total - 1;
+  // 마지막 문장에서 "완료!" 텍스트로 변경
+  const nextBtn = document.getElementById('sent-next-btn');
+  if (sentIdx === total - 1) {
+    nextBtn.textContent = '✅ 다 읽었어!';
+    nextBtn.disabled = false;
+  } else {
+    nextBtn.textContent = '다음 →';
+    nextBtn.disabled = false;
+  }
   // 점 표시
   const dots = document.getElementById('sent-dots');
   dots.innerHTML = currentSentences.map((_,i) =>
-    `<div style="width:8px;height:8px;border-radius:50%;background:${i===sentIdx?'var(--success)':'var(--border)'}"></div>`
+    `<div style="width:8px;height:8px;border-radius:50%;background:${i<sentIdx?'var(--success)':i===sentIdx?'var(--primary)':'var(--border)'}"></div>`
   ).join('');
 }
 
 function sentNav(dir) {
   const total = currentSentences.length;
+  if (dir > 0 && sentIdx === total - 1) {
+    // 마지막 문장에서 "다 읽었어!" 탭
+    allSentsRead = true;
+    showToast('📖 모든 문장 완주! 훌륭해! 🌟', 2000);
+    checkFollowComplete();
+    return;
+  }
   sentIdx = Math.max(0, Math.min(total - 1, sentIdx + dir));
   renderSentNav();
+}
+
+// 따라읽기 완료 버튼 잠금 해제 조건 체크
+function checkFollowComplete() {
+  if (readingSubMode !== 'follow') return;
+  const timerTotal = getTimerTotal();
+  // 10분 이상 경과: timerSec <= timerTotal - FOLLOW_UNLOCK_SECS
+  const unlockThreshold = Math.max(0, timerTotal - FOLLOW_UNLOCK_SECS);
+  const timeOk = timerSec <= unlockThreshold;
+  const sentOk = allSentsRead;
+  const completeBtn = document.getElementById('reading-complete-btn');
+  if (timeOk && sentOk && completeBtn.style.display === 'none' && !getState().todayFollowRead) {
+    completeBtn.textContent = '✅ 따라읽기 완료! (+20 XP)';
+    completeBtn.style.display = 'block';
+    showToast('🎉 완료 버튼 잠금 해제!', 2000);
+  }
 }
 
 function speakCurrentSentence() {
@@ -1684,11 +1724,14 @@ function updateReading() {
   document.getElementById('follow-guide-card').style.display = isFollow ? 'block' : 'none';
   const sentNavEl = document.getElementById('sentence-nav');
   const sents = state.settings.keySentences || [];
+  followElapsedSecs = 0;
   if (isFollow && sents.length > 0) {
     sentNavEl.style.display = 'block';
     initSentNav(sents);
   } else {
     sentNavEl.style.display = 'none';
+    allSentsRead = true; // 문장 없으면 시간 조건만으로 완료
+    initSentNav([]);
   }
 
   // 완료 여부
@@ -1713,8 +1756,22 @@ function timerToggle() {
     document.getElementById('timer-start-btn').innerHTML='⏸ 일시정지';
     timerInterval=setInterval(()=>{
       timerSec--;
+      if (readingSubMode === 'follow') followElapsedSecs++;
       updateTimerDisplay();
-      if (timerSec<=0) {
+      // 따라읽기: 10분마다 잠금 해제 체크
+      if (readingSubMode === 'follow') {
+        checkFollowComplete();
+        if (timerSec <= 0) {
+          clearInterval(timerInterval); timerRunning=false; timerSec=0;
+          document.getElementById('timer-start-btn').innerHTML='⏱ 완료!';
+          updateTimerDisplay();
+          // 시간은 다 됐지만 문장 미완주 시 안내
+          if (!allSentsRead && currentSentences.length > 0) {
+            showToast('📖 문장도 끝까지 읽어봐! 거의 다 왔어 💪', 3000);
+          }
+          checkFollowComplete();
+        }
+      } else if (timerSec<=0) {
         clearInterval(timerInterval); timerRunning=false; timerSec=0;
         document.getElementById('timer-start-btn').innerHTML='⏱ 완료!';
         const completeBtn=document.getElementById('reading-complete-btn');
@@ -1744,7 +1801,16 @@ function completeReading() {
     if (state.todayFollowRead) return;
     state.todayFollowRead = true;
     if(listeningMode) state.todayListening = true;
-    state.totalSessions=(state.totalSessions||0)+1; saveState(state);
+    state.totalSessions=(state.totalSessions||0)+1;
+    // 따라읽기 완료 기록 저장 (엄마 모드 확인용)
+    state.followReadLog = state.followReadLog || [];
+    state.followReadLog.push({
+      date: new Date().toDateString(),
+      timeMin: Math.round(followElapsedSecs / 60),
+      sentTotal: currentSentences.length,
+      sentRead: allSentsRead ? currentSentences.length : sentIdx + 1,
+    });
+    saveState(state);
     document.getElementById('reading-complete-btn').style.display='none';
     document.getElementById('timer-start-btn').textContent='✅ 완료됨';
     document.getElementById('timer-start-btn').disabled=true;
@@ -2070,7 +2136,7 @@ function updateMomMode(){
   document.getElementById('mom-audio-url').value=state.settings.audioUrl||'';
   document.getElementById('mom-timer-mins').value=state.settings.timerMins||15;
   document.getElementById('mom-sentences').value=(state.settings.keySentences||[]).join('\n');
-  renderMomWordList(); renderMomUnknownWords(); renderMomSubmissions(); renderMomReadingLog(); renderMomHardWords(); renderMomAnalytics();
+  renderMomWordList(); renderMomUnknownWords(); renderMomSubmissions(); renderMomReadingLog(); renderMomFollowReadLog(); renderMomHardWords(); renderMomAnalytics();
 }
 function renderMomSubmissions(){
   state=getState();
@@ -2182,6 +2248,30 @@ function renderMomReadingLog(){
       </div>
     `).join('')}
   `;
+}
+function renderMomFollowReadLog(){
+  state=getState();
+  const el=document.getElementById('mom-follow-read-log');
+  if(!el) return;
+  const logs=(state.followReadLog||[]).slice().reverse().slice(0,7);
+  if(!logs.length){
+    el.innerHTML='<div style="font-size:13px;color:var(--text-muted)">아직 따라읽기 기록이 없어요</div>';
+    return;
+  }
+  el.innerHTML=logs.map(l=>{
+    const sentText = l.sentTotal > 0
+      ? `<span style="color:${l.sentRead>=l.sentTotal?'var(--success)':'var(--accent)'}">문장 ${l.sentRead}/${l.sentTotal}</span>`
+      : '';
+    const timeOk = l.timeMin >= 10;
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
+      <span style="color:var(--text-muted)">${l.date||''}</span>
+      <span style="display:flex;gap:8px;align-items:center;">
+        ${sentText}
+        <span style="color:${timeOk?'var(--success)':'var(--accent)'}">${l.timeMin}분</span>
+        <span>${timeOk?'✅':'⏱'}</span>
+      </span>
+    </div>`;
+  }).join('');
 }
 function changePin(){
   const p=document.getElementById('new-pin').value;
