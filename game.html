@@ -240,6 +240,9 @@
   <div class="streak-bar" id="streak-bar">
     <div class="streak-dot" id="s0"></div>
     <div class="streak-dot" id="s1"></div>
+    <div class="streak-dot" id="s2"></div>
+    <div class="streak-dot" id="s3"></div>
+    <div class="streak-dot" id="s4"></div>
   </div>
 
   <!-- Question -->
@@ -278,6 +281,10 @@
       <div class="score-item">
         <div class="score-val" id="res-max-diff">Easy</div>
         <div class="score-label">최고 난이도</div>
+      </div>
+      <div class="score-item">
+        <div class="score-val" id="res-avg-time">-</div>
+        <div class="score-label">평균 응답(초)</div>
       </div>
     </div>
 
@@ -393,10 +400,13 @@ let totalQuestions = 10;
 let correctCount = 0;
 let wrongCount = 0;
 let maxLevelReached = 0;
-let usedQ = { easy:[], medium:[], hard:[] };
+let usedQ = { easy:[], medium:[], hard:[], vocab:[] };
+let vocabQuestions = [];
 let currentQ = null;
 let wrongLog = [];
 let answered = false;
+let questionStartTime = 0;   // 문제 표시 시각 (응답 시간 측정용)
+let recentResults = [];      // 최근 5문제 결과 [true/false] (롤링 정확도)
 
 // ══════════════════════════════════════════
 // SCREEN UTILS
@@ -443,9 +453,27 @@ function startBattle() {
   correctCount = 0;
   wrongCount = 0;
   maxLevelReached = 0;
-  usedQ = { easy:[], medium:[], hard:[] };
+  usedQ = { easy:[], medium:[], hard:[], vocab:[] };
   wrongLog = [];
   answered = false;
+  recentResults = [];
+
+  // Word Scout에서 "어려워요"로 표시된 단어 → 보스 배틀 첫 문제로 우선 출제
+  try {
+    const hw = JSON.parse(localStorage.getItem('jayHardWords') || '[]');
+    const FALLBACK = ['뛰어달리다', '조용한', '무서운', '기쁜', '어둡다', '새로운'];
+    vocabQuestions = hw.slice(0, 3).map((w, i) => {
+      const others = hw.filter((_, j) => j !== i).map(x => x.meaning);
+      const distractors = [...others, ...FALLBACK].slice(0, 3);
+      const allChoices = [w.meaning, ...distractors];
+      // 셔플
+      for (let k = allChoices.length - 1; k > 0; k--) {
+        const r = Math.floor(Math.random() * (k + 1));
+        [allChoices[k], allChoices[r]] = [allChoices[r], allChoices[k]];
+      }
+      return { q: `"${w.word}"의 뜻은?`, choices: allChoices, ans: allChoices.indexOf(w.meaning) };
+    });
+  } catch { vocabQuestions = []; }
 
   document.getElementById('boss-sprite').textContent = selectedBoss.emoji;
   document.getElementById('boss-sprite').className = 'boss-sprite';
@@ -460,6 +488,16 @@ function startBattle() {
 // QUESTION ENGINE
 // ══════════════════════════════════════════
 function getNextQuestion() {
+  // Easy 단계에서 Word Scout 어려운 단어 먼저 출제
+  if (currentLevel === 0 && vocabQuestions.length > 0 && usedQ.vocab.length < vocabQuestions.length) {
+    const available = vocabQuestions.filter((_, i) => !usedQ.vocab.includes(i));
+    if (available.length > 0) {
+      const pick = Math.floor(Math.random() * available.length);
+      const realIdx = vocabQuestions.indexOf(available[pick]);
+      usedQ.vocab.push(realIdx);
+      return { ...available[pick], level: 0, fromVocab: true };
+    }
+  }
   const lvlKey = ['easy','medium','hard'][currentLevel];
   const pool = QUESTIONS[lvlKey];
   const available = pool.filter((_,i) => !usedQ[lvlKey].includes(i));
@@ -472,6 +510,7 @@ function getNextQuestion() {
 
 function loadQuestion() {
   answered = false;
+  questionStartTime = Date.now();
   currentQ = getNextQuestion();
   document.getElementById('q-num').textContent = `문제 ${qIndex+1} / ${totalQuestions}`;
   document.getElementById('q-text').textContent = currentQ.q;
@@ -500,10 +539,27 @@ function answer(idx) {
   });
 
   const correct = idx === currentQ.ans;
+  const responseMs = Date.now() - questionStartTime;
+
+  // 롤링 정확도 업데이트 (최근 5문제)
+  recentResults.push(correct);
+  if (recentResults.length > 5) recentResults.shift();
+  const recentAccuracy = recentResults.filter(Boolean).length / recentResults.length;
 
   if (correct) {
     document.getElementById('choice-'+idx).classList.add('correct');
     correctCount++;
+    // vocab 단어 정답 시 jayHardWords에서 제거
+    if (currentQ.fromVocab && currentQ.choices && currentQ.ans !== undefined) {
+      try {
+        const correctWord = currentQ.q.match(/"(.+?)"/)?.[1];
+        if (correctWord) {
+          let hw = JSON.parse(localStorage.getItem('jayHardWords') || '[]');
+          hw = hw.filter(w => w.word !== correctWord);
+          localStorage.setItem('jayHardWords', JSON.stringify(hw));
+        }
+      } catch {}
+    }
     correctStreak++;
     const dmg = [15, 22, 35][currentLevel];
     bossHp = Math.max(0, bossHp - dmg);
@@ -512,8 +568,9 @@ function answer(idx) {
     void document.getElementById('boss-sprite').offsetWidth;
     document.getElementById('boss-sprite').classList.add('hit');
     if (currentLevel > maxLevelReached) maxLevelReached = currentLevel;
-    // Adaptive UP
-    if (correctStreak >= 2 && currentLevel < 2) {
+    // 동적 난이도 UP: 연속 2정답 + 최근 정확도 60% 이상 + 빠른 응답(15초 이내)
+    const fastResponse = responseMs < 15000;
+    if (correctStreak >= 2 && currentLevel < 2 && (recentAccuracy >= 0.6 || fastResponse)) {
       currentLevel++;
       correctStreak = 0;
       setTimeout(()=>showToast(['📈 난이도 UP! Medium!','📈 난이도 UP! Hard!'][currentLevel-1]), 600);
@@ -525,9 +582,12 @@ function answer(idx) {
     const dmg = selectedBoss.atk;
     jayHp = Math.max(0, jayHp - dmg);
     spawnDamage('-'+dmg+'HP', 'var(--danger)', false);
-    wrongLog.push({ q: currentQ.q, correct: currentQ.choices[currentQ.ans] });
-    // Adaptive DOWN
-    if (currentLevel > 0) {
+    wrongLog.push({ q: currentQ.q, correct: currentQ.choices[currentQ.ans], responseMs });
+    // 동적 난이도 DOWN: 오답 + 최근 정확도 40% 미만이면 즉시 레벨 다운
+    if (currentLevel > 0 && (recentResults.length >= 3 && recentAccuracy < 0.4)) {
+      currentLevel--;
+      setTimeout(()=>showToast('📉 난이도 조정됨'), 600);
+    } else if (currentLevel > 0 && recentResults.length < 3) {
       currentLevel--;
       setTimeout(()=>showToast('📉 난이도 조정됨'), 600);
     }
@@ -581,7 +641,7 @@ function updateDiffBadge() {
   badge.textContent = data[1];
 }
 function updateStreakBar() {
-  for(let i=0;i<2;i++){
+  for(let i=0;i<5;i++){
     document.getElementById('s'+i).className='streak-dot'+(i<correctStreak?' filled':'');
   }
 }
@@ -632,6 +692,7 @@ function showResult() {
     const s = JSON.parse(localStorage.getItem('jayState')||'{}');
     s.xp = (s.xp||0) + xp;
     s.todayXp = (s.todayXp||0) + xp;
+    s.todayMission = true;
     localStorage.setItem('jayState', JSON.stringify(s));
   } catch {}
 
@@ -642,6 +703,10 @@ function showResult() {
   document.getElementById('res-correct').textContent = correctCount;
   document.getElementById('res-wrong').textContent = wrongCount;
   document.getElementById('res-max-diff').textContent = ['Easy','Medium','Hard'][maxLevelReached];
+  const avgMs = wrongLog.length > 0
+    ? Math.round(wrongLog.reduce((s,w)=>s+(w.responseMs||0),0) / wrongLog.length / 1000)
+    : '-';
+  document.getElementById('res-avg-time').textContent = avgMs;
 
   // Wrong answers review
   const rev = document.getElementById('wrong-review');

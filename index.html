@@ -246,6 +246,20 @@
     }
     .cal-day.done { background: var(--success); color: #0f0f23; }
     .cal-day.today { border: 2px solid var(--primary); }
+    /* Badge Grid */
+    .badge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .badge-item { text-align: center; padding: 12px 6px; background: var(--surface); border-radius: 14px; border: 1px solid var(--border); }
+    .badge-item.unlocked { border-color: var(--accent); background: rgba(255,215,0,0.08); }
+    .badge-item.locked { opacity: 0.35; filter: grayscale(0.6); }
+    .badge-emoji { font-size: 26px; margin-bottom: 4px; }
+    .badge-name { font-size: 10px; font-weight: 700; line-height: 1.3; color: var(--text-muted); }
+    .badge-item.unlocked .badge-name { color: var(--accent); }
+    /* Weekly Challenge */
+    .challenge-bar-bg { background: var(--border); border-radius: 100px; height: 10px; overflow: hidden; margin: 8px 0 4px; }
+    .challenge-bar-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--primary), #9c5fff); transition: width 0.5s; }
+    /* Analytics Chart */
+    .analytics-bar-wrap { display: flex; align-items: flex-end; gap: 4px; height: 60px; margin: 8px 0; }
+    .analytics-bar { flex: 1; background: var(--primary); border-radius: 4px 4px 0 0; min-height: 2px; transition: height 0.3s; }
     /* Mom Mode */
     .mom-input {
       background: var(--surface);
@@ -482,6 +496,8 @@
 <div class="praise-popup" id="praisePopup">
   <div style="font-size:64px;margin-bottom:8px;">🎉</div>
   <div id="praisePopupTitle" style="font-size:22px;font-weight:800;margin-bottom:4px;">엄마/아빠가 칭찬했어!</div>
+  <div id="praisePopupMission" style="font-size:13px;color:var(--text-muted);margin-bottom:8px;display:none;"></div>
+  <div id="praisePopupStars" style="font-size:24px;margin-bottom:8px;display:none;"></div>
   <div id="praisePopupXp" style="font-size:28px;font-weight:900;color:var(--accent);margin-bottom:8px;"></div>
   <div id="praisePopupMsg" class="praise-msg-box" style="display:none;"></div>
   <button class="btn btn-primary" onclick="closePraisePopup()" style="margin-top:8px;">최고야! 🙌</button>
@@ -531,6 +547,18 @@
     <div style="font-size:12px;color:var(--text-muted);margin-bottom:2px;">오늘 획득한 XP</div>
     <div style="font-size:40px;font-weight:800;color:var(--accent);" id="today-xp-display">0</div>
   </div>
+
+  <!-- Weekly Challenge -->
+  <div class="card" id="weekly-challenge-card" style="display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <div style="font-size:14px;font-weight:700;">📅 이번 주 챌린지</div>
+      <div style="font-size:12px;color:var(--accent);font-weight:700;" id="wc-pages-text">0 / 30 페이지</div>
+    </div>
+    <div class="challenge-bar-bg">
+      <div class="challenge-bar-fill" id="wc-bar" style="width:0%"></div>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);" id="wc-status">이번 주 30페이지 읽기 도전!</div>
+  </div>
 </div>
 
 <!-- ===== LISTEN (STEP 2) ===== -->
@@ -568,6 +596,15 @@
 <div class="screen" id="screen-wordscout">
   <div class="section-title">⚔️ Word Scout</div>
 
+  <div class="card" style="background:rgba(108,99,255,0.1);border-color:var(--primary);margin-bottom:16px;">
+    <div style="font-size:14px;color:var(--primary);font-weight:600;">⚔️ Word Scout 미션</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-top:4px;line-height:1.8;">
+      오늘 책에 나올 단어들이야! 👀<br>
+      카드를 <b>탭</b>해서 뜻 확인 →<br>
+      알면 <b style="color:var(--success)">✅ 알아요!</b> &nbsp; 어려우면 <b style="color:var(--accent)">🤔 어려워요</b>
+    </div>
+  </div>
+
   <div id="no-words-state" style="text-align:center;padding:60px 20px;">
     <div style="font-size:64px;margin-bottom:16px;">😴</div>
     <div style="font-size:18px;font-weight:700;margin-bottom:8px;">단어가 없어요</div>
@@ -591,9 +628,12 @@
         </div>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
-      <button class="btn" style="background:var(--border);color:var(--text);" onclick="wsNext(false)">🤔 어려워요</button>
-      <button class="btn btn-success" onclick="wsNext(true)">✅ 알아요!</button>
+    <div style="margin-bottom:6px;text-align:center;font-size:11px;color:var(--text-muted);">다음 복습까지: <span id="ws-next-review"></span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:20px;">
+      <button class="btn" style="background:rgba(248,113,113,0.2);color:var(--danger);font-size:13px;padding:10px 4px;" onclick="wsRate(0)">🔁<br><span style="font-size:10px;">Again</span></button>
+      <button class="btn" style="background:rgba(251,191,36,0.2);color:#fbbf24;font-size:13px;padding:10px 4px;" onclick="wsRate(1)">😓<br><span style="font-size:10px;">Hard</span></button>
+      <button class="btn" style="background:rgba(74,222,128,0.2);color:var(--success);font-size:13px;padding:10px 4px;" onclick="wsRate(2)">✅<br><span style="font-size:10px;">Good</span></button>
+      <button class="btn" style="background:rgba(108,99,255,0.2);color:var(--primary);font-size:13px;padding:10px 4px;" onclick="wsRate(3)">⚡<br><span style="font-size:10px;">Easy</span></button>
     </div>
     <div class="ws-dots-row" id="ws-dots"></div>
   </div>
@@ -617,6 +657,43 @@
   <div style="display:flex;gap:8px;margin-bottom:16px;">
     <button class="mode-toggle-btn active-read" id="mode-btn-read" onclick="setReadingMode('reading')">📖 읽기</button>
     <button class="mode-toggle-btn" id="mode-btn-listen" onclick="setReadingMode('listening')">🎧 듣기+읽기</button>
+  </div>
+
+  <div id="solo-guide-card" style="display:none;" class="card" style="background:rgba(255,215,0,0.08);border-color:var(--accent);margin-bottom:12px;">
+    <div style="font-size:14px;color:var(--accent);font-weight:600;">⏱️ 혼자 읽기 미션</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-top:4px;line-height:1.8;">
+      ▶ 버튼 눌러서 타이머 시작! ⏱️<br>
+      모르는 단어가 나오면 <b style="color:var(--danger)">❓ 버튼</b> 눌러줘<br>
+      타이머 끝나면 완료 버튼이 나타나!
+    </div>
+  </div>
+
+  <div id="follow-guide-card" style="display:none;" class="card" style="background:rgba(74,222,128,0.08);border-color:var(--success);margin-bottom:12px;">
+    <div style="font-size:14px;color:var(--success);font-weight:600;">📖 따라 읽기 미션</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-top:4px;line-height:1.8;">
+      🔊 버튼으로 문장을 들어봐 → 큰 소리로 따라 읽기!<br>
+      다 읽으면 <b>다음 문장 →</b> 버튼을 눌러봐 😊<br>
+      문장이 없으면 오디오 들으면서 눈으로 따라가기!
+    </div>
+  </div>
+
+  <div id="sentence-nav" style="display:none;margin-bottom:16px;">
+    <div class="card" style="background:linear-gradient(135deg,#1a3a1a,#1e401e);border-color:var(--success);padding:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <span style="font-size:12px;color:var(--success);font-weight:700;">📖 따라읽기</span>
+        <span id="sent-progress" style="font-size:12px;color:var(--text-muted);">1 / 1</span>
+      </div>
+      <div id="sent-text" style="font-size:20px;font-weight:700;color:white;line-height:1.6;min-height:56px;margin-bottom:16px;text-align:center;">-</div>
+      <div style="text-align:center;margin-bottom:14px;">
+        <button onclick="speakCurrentSentence()" style="background:rgba(74,222,128,0.2);border:2px solid var(--success);border-radius:12px;padding:10px 24px;color:var(--success);font-size:16px;font-weight:700;cursor:pointer;">🔊 들어봐!</button>
+      </div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.5);text-align:center;margin-bottom:14px;">🎤 큰 소리로 따라 읽어봐!</div>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;">
+        <button id="sent-prev-btn" onclick="sentNav(-1)" class="btn btn-outline" style="padding:10px;font-size:13px;">← 이전</button>
+        <div id="sent-dots" style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;max-width:120px;"></div>
+        <button id="sent-next-btn" onclick="sentNav(1)" class="btn btn-success" style="padding:10px;font-size:13px;">다음 →</button>
+      </div>
+    </div>
   </div>
 
   <!-- YouTube Player (🎧 모드 시 표시) -->
@@ -751,6 +828,11 @@
     <div style="font-size:15px;font-weight:700;margin-bottom:16px;">📅 이번 달 기록</div>
     <div class="calendar-grid" id="calendar-grid"></div>
   </div>
+
+  <div class="card">
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px;">🏅 배지 컬렉션</div>
+    <div class="badge-grid" id="badge-grid"></div>
+  </div>
 </div>
 
 <!-- ===== MOM MODE ===== -->
@@ -771,7 +853,18 @@
     <label class="mom-label">🎧 오디오북 YouTube URL</label>
     <input class="mom-input" id="mom-audio-url" placeholder="예: https://youtube.com/watch?v=xxxxx" type="url">
     <div style="font-size:11px;color:var(--text-muted);margin-top:-8px;margin-bottom:12px;">YouTube에서 오디오북 URL을 복사해 붙여넣기 해주세요</div>
+    <label class="mom-label">⏱️ 읽기 타이머 (분)</label>
+    <input class="mom-input" id="mom-timer-mins" placeholder="기본값: 15분" type="number" min="1" max="60">
     <button class="btn btn-primary" onclick="saveBookSettings()">💾 저장</button>
+  </div>
+
+  <div class="card">
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px;">📖 따라 읽기 문장 입력</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">오늘 Jay가 따라 읽을 문장을 한 줄에 하나씩 입력해주세요</div>
+    <textarea class="mom-input" id="mom-sentences" rows="5"
+      placeholder="예:&#10;Nate the Great looked for clues.&#10;He walked down the street.&#10;The dog was hiding under the bed."
+      style="resize:vertical;font-size:14px;line-height:1.7;"></textarea>
+    <button class="btn btn-outline" onclick="saveSentences()" style="margin-top:8px;">💾 문장 저장</button>
   </div>
 
   <div class="card">
@@ -799,8 +892,18 @@
   </div>
 
   <div class="card">
+    <div style="font-size:15px;font-weight:700;margin-bottom:12px;">⚠️ Jay가 어려워하는 단어</div>
+    <div id="mom-hard-words"></div>
+  </div>
+
+  <div class="card">
     <div style="font-size:15px;font-weight:700;margin-bottom:16px;">❓ Jay가 모른 단어</div>
     <div id="mom-unknown-words"><div style="font-size:13px;color:var(--text-muted)">아직 없어요</div></div>
+  </div>
+
+  <div class="card">
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px;">📊 학습 분석</div>
+    <div id="mom-analytics"></div>
   </div>
 
   <div class="card">
@@ -808,6 +911,16 @@
     <label class="mom-label">새 PIN (4자리 숫자)</label>
     <input class="mom-input" id="new-pin" placeholder="4자리 숫자" type="number">
     <button class="btn btn-outline" onclick="changePin()">PIN 변경</button>
+  </div>
+
+  <div class="card">
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px;">💾 데이터 백업 / 복원</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">기기 바꾸거나 브라우저 초기화 전에 꼭 백업하세요!</div>
+    <button class="btn btn-outline" onclick="backupData()" style="margin-bottom:10px;">⬇️ JSON으로 백업</button>
+    <label class="btn btn-outline" style="cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+      ⬆️ 백업 파일 복원
+      <input type="file" accept=".json" onchange="restoreData(event)" style="display:none;">
+    </label>
   </div>
 </div>
 
@@ -842,11 +955,27 @@ const MISSIONS = [
   { id:4, emoji:'✏️', title:'단어로 문장 만들기',    desc:'오늘 Word Scout 단어 하나로 영어 문장 써봐',        xp:25, placeholder:'영어로 문장을 써봐! (예: I saw a...)' },
 ];
 
+const BADGES = [
+  { id:'streak_3',     emoji:'🔥',  name:'3일 연속',         check: s => (s.streak||0) >= 3 },
+  { id:'streak_7',     emoji:'🔥🔥', name:'7일 연속',         check: s => (s.streak||0) >= 7 },
+  { id:'words_10',     emoji:'⚡',  name:'단어 10개',         check: s => (s.totalWords||0) >= 10 },
+  { id:'words_30',     emoji:'⚡⚡', name:'단어 30개',         check: s => (s.totalWords||0) >= 30 },
+  { id:'sessions_5',   emoji:'📖',  name:'읽기 5회',          check: s => (s.totalSessions||0) >= 5 },
+  { id:'sessions_20',  emoji:'📚',  name:'읽기 20회',         check: s => (s.totalSessions||0) >= 20 },
+  { id:'missions_3',   emoji:'📝',  name:'미션 3회',          check: s => (s.history||[]).filter(h=>h.mission).length >= 3 },
+  { id:'missions_10',  emoji:'🌟',  name:'미션 마스터',        check: s => (s.history||[]).filter(h=>h.mission).length >= 10 },
+  { id:'level_5',      emoji:'💎',  name:'레벨 5 달성',       check: s => getLevelInfo(s.xp).level >= 5 },
+  { id:'full_quest_5', emoji:'🏆',  name:'완전 퀘스트 5일',    check: s => (s.history||[]).filter(h=>h.ws&&h.reading&&h.mission).length >= 5 },
+  { id:'boss_won',     emoji:'⚔️',  name:'첫 보스 처치',      check: s => (s.bossBattlesWon||0) >= 1 },
+  { id:'boss_5',       emoji:'👑',  name:'보스 5번 처치',      check: s => (s.bossBattlesWon||0) >= 5 },
+];
+
 function defaultState() {
   return {
     xp:0, streak:0, lastDate:null,
     todayXp:0, todayWordScout:false, todayListen:false, todayFollowRead:false, todayReading:false, todayMission:false, todayListening:false,
     totalWords:0, totalSessions:0,
+    bossBattlesWon:0, badges:[],
     history:[], unknownWords:[],
     missionSubmissions:[],
     readingLog:[],
@@ -872,6 +1001,47 @@ function getWords() {
   catch { return []; }
 }
 function saveWords(w) { localStorage.setItem('jayWords', JSON.stringify(w)); }
+function getHardWords() {
+  try {
+    const hw = JSON.parse(localStorage.getItem('jayHardWords') || '[]');
+    // SM-2 필드 없는 기존 데이터 마이그레이션
+    return hw.map(w => ({
+      interval: 1, ease: 2.5, nextReview: Date.now(), lastReview: null,
+      ...w
+    }));
+  }
+  catch { return []; }
+}
+function saveHardWords(w) { localStorage.setItem('jayHardWords', JSON.stringify(w)); }
+
+// ── SM-2 알고리즘 ──
+// quality: 0=Again, 1=Hard, 2=Good, 3=Easy
+function sm2Update(card, quality) {
+  const qMap = [1, 3, 4, 5];
+  const q = qMap[quality];
+  let ease = card.ease || 2.5;
+  let interval = card.interval || 1;
+  if (q < 3) {
+    interval = 1; // 실패 → 리셋
+  } else if (interval <= 1) {
+    interval = 3;
+  } else if (interval <= 3) {
+    interval = 7;
+  } else {
+    interval = Math.round(interval * ease);
+  }
+  ease = Math.max(1.3, ease + (0.1 - (5 - q) * (0.08 + 0.02 * (5 - q))));
+  return { ...card, interval, ease, nextReview: Date.now() + interval * 86400000, lastReview: Date.now() };
+}
+
+function sm2NextReviewLabel(card) {
+  const intervals = [null, '내일', '3일 후', '7일 후'];
+  if (!card.interval) return '내일';
+  if (card.interval === 1) return '내일';
+  if (card.interval <= 3) return '3일 후';
+  if (card.interval <= 7) return '7일 후';
+  return `${card.interval}일 후`;
+}
 
 let state = getState();
 
@@ -885,6 +1055,12 @@ function checkDailyReset() {
       ws: state.todayWordScout, reading: state.todayReading, mission: state.todayMission === true });
     const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
     state.streak = (state.lastDate === yesterday.toDateString()) ? (state.streak||0)+1 : 1;
+    // 스트릭 마일스톤 보너스
+    const STREAK_BONUS = {3: 50, 7: 200};
+    if (STREAK_BONUS[state.streak]) {
+      state.pendingStreakBonus = STREAK_BONUS[state.streak];
+      state.pendingStreakDays = state.streak;
+    }
   }
   state.todayXp=0; state.todayWordScout=false; state.todayListen=false; state.todayFollowRead=false;
   state.todayReading=false; state.todayListening=false; state.todayMission=false; state.unknownWords=[]; state.lastDate=today;
@@ -896,6 +1072,47 @@ function checkDailyReset() {
 // ──────────────────────────────────────────
 // readingSubMode: 'follow' = 따라읽기(step3), 'solo' = 혼자읽기(step4)
 let readingSubMode = 'solo';
+
+// ── 따라읽기 문장 네비게이션 ──
+let currentSentences = [];
+let sentIdx = 0;
+
+function initSentNav(sents) {
+  currentSentences = sents;
+  sentIdx = 0;
+  renderSentNav();
+}
+
+function renderSentNav() {
+  const total = currentSentences.length;
+  document.getElementById('sent-progress').textContent = `${sentIdx + 1} / ${total}`;
+  document.getElementById('sent-text').textContent = currentSentences[sentIdx] || '';
+  document.getElementById('sent-prev-btn').disabled = sentIdx === 0;
+  document.getElementById('sent-next-btn').disabled = sentIdx === total - 1;
+  // 점 표시
+  const dots = document.getElementById('sent-dots');
+  dots.innerHTML = currentSentences.map((_,i) =>
+    `<div style="width:8px;height:8px;border-radius:50%;background:${i===sentIdx?'var(--success)':'var(--border)'}"></div>`
+  ).join('');
+}
+
+function sentNav(dir) {
+  const total = currentSentences.length;
+  sentIdx = Math.max(0, Math.min(total - 1, sentIdx + dir));
+  renderSentNav();
+}
+
+function speakCurrentSentence() {
+  const text = currentSentences[sentIdx];
+  if (!text) return;
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.lang = 'en-US';
+    utt.rate = 0.85;
+    window.speechSynthesis.speak(utt);
+  }
+}
 
 function navigate(screen, opts) {
   state = getState();
@@ -955,12 +1172,35 @@ function getLevelInfo(xp) {
   for (let i=LEVELS.length-1;i>=0;i--) if (xp>=LEVELS[i].minXp) return LEVELS[i];
   return LEVELS[0];
 }
+function showToast(msg, duration=2200) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:600;z-index:3000;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.4);';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), duration);
+}
+
+function checkBadges() {
+  state = getState();
+  const earned = state.badges || [];
+  let changed = false;
+  BADGES.forEach(b => {
+    if (!earned.includes(b.id) && b.check(state)) {
+      earned.push(b.id);
+      changed = true;
+      setTimeout(() => showToast(`🏅 새 배지 획득! ${b.emoji} ${b.name}`, 3000), 600);
+    }
+  });
+  if (changed) { state.badges = earned; saveState(state); }
+}
+
 function addXp(amount, label) {
   const prevLevel = getLevelInfo(state.xp).level;
   state.xp += amount; state.todayXp += amount; saveState(state);
   showXpPopup(amount, label);
   floatXp(amount);
-  if (getLevelInfo(state.xp).level > prevLevel) setTimeout(()=>alert('🎉 레벨 업! 축하해, Jay!'), 800);
+  if (getLevelInfo(state.xp).level > prevLevel) setTimeout(()=>showToast('🎉 레벨 업! 축하해, Jay! 🌟', 3000), 800);
+  checkBadges();
 }
 function showXpPopup(amount, label) {
   document.getElementById('xpPopupText').textContent = '+'+amount+' XP';
@@ -995,6 +1235,15 @@ const QUEST_STEPS = [
 
 function updateHome() {
   state = getState();
+  // 스트릭 마일스톤 보너스 지급 (한 번만)
+  if (state.pendingStreakBonus) {
+    const bonus = state.pendingStreakBonus;
+    const days = state.pendingStreakDays;
+    delete state.pendingStreakBonus;
+    delete state.pendingStreakDays;
+    saveState(state);
+    setTimeout(() => addXp(bonus, `🔥 ${days}일 연속 달성 보너스!`), 600);
+  }
   const li = getLevelInfo(state.xp);
   const ni = LEVELS[li.level] || LEVELS[LEVELS.length-1];
   const pct = Math.min(((state.xp-li.minXp)/(ni.minXp-li.minXp))*100, 100);
@@ -1006,9 +1255,115 @@ function updateHome() {
   document.getElementById('today-xp-display').textContent = state.todayXp||0;
   document.getElementById('today-book-info').textContent = state.settings.bookTitle||'Nate the Great Lost List';
   const h = new Date().getHours();
-  document.getElementById('greeting-text').textContent =
-    h<12?'좋은 아침이야, Jay! ☀️': h<18?'안녕, Jay! 🌤️':'저녁이야, Jay! 🌙';
+  const xpToday = state.todayXp || 0;
+  let greetMsg;
+  if (xpToday === 0) {
+    greetMsg = h<12 ? '좋은 아침이야, Jay! 오늘 첫 퀘스트 시작해볼까? ☀️'
+             : h<18 ? '안녕, Jay! 지금이 공부할 좋은 시간이야 🌤️'
+             : '저녁이야, Jay! 오늘 마무리 해보자 🌙';
+  } else if (xpToday < 80) {
+    greetMsg = `벌써 ${xpToday}XP! 거의 다 왔어, 화이팅! 💪`;
+  } else {
+    greetMsg = '오늘 퀘스트 완료! 최고야, Jay! 🎊';
+  }
+  document.getElementById('greeting-text').textContent = greetMsg;
   renderQuestSteps();
+  renderWeeklyChallenge();
+}
+
+function renderWeeklyChallenge() {
+  state = getState();
+  const logs = state.readingLog || [];
+  // 이번 주 월요일 00:00
+  const now = new Date();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  monday.setHours(0, 0, 0, 0);
+  const weekPages = logs
+    .filter(l => new Date(l.date) >= monday)
+    .reduce((sum, l) => sum + Math.max(0, (l.endPage||0) - (l.startPage||0)), 0);
+  const goal = state.settings.weeklyGoal || 30;
+  const pct = Math.min(100, Math.round(weekPages / goal * 100));
+  const card = document.getElementById('weekly-challenge-card');
+  if (!card) return;
+  card.style.display = 'block';
+  document.getElementById('wc-pages-text').textContent = `${weekPages} / ${goal} 페이지`;
+  document.getElementById('wc-bar').style.width = pct + '%';
+  document.getElementById('wc-status').textContent =
+    pct >= 100 ? '🎉 이번 주 챌린지 완료! 대단해, Jay!'
+    : pct >= 50 ? `절반 넘었어! ${goal - weekPages}페이지 남았어 💪`
+    : `이번 주 ${goal}페이지 읽기 도전! 화이팅 🔥`;
+}
+
+function renderBadges() {
+  state = getState();
+  const earned = state.badges || [];
+  const grid = document.getElementById('badge-grid');
+  if (!grid) return;
+  grid.innerHTML = BADGES.map(b => {
+    const unlocked = earned.includes(b.id);
+    return `<div class="badge-item ${unlocked ? 'unlocked' : 'locked'}">
+      <div class="badge-emoji">${b.emoji}</div>
+      <div class="badge-name">${b.name}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderMomAnalytics() {
+  state = getState();
+  const el = document.getElementById('mom-analytics');
+  if (!el) return;
+  const logs = state.readingLog || [];
+  const history = state.history || [];
+  const now = new Date();
+  // 이번 달 통계
+  const monthLogs = logs.filter(l => {
+    const d = new Date(l.date);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+  const monthPages = monthLogs.reduce((s, l) => s + Math.max(0, (l.endPage||0)-(l.startPage||0)), 0);
+  const monthSessions = monthLogs.length;
+  const avgPages = monthSessions > 0 ? Math.round(monthPages / monthSessions) : 0;
+  // 최근 7일 XP (막대 차트)
+  const recent7 = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(now.getDate() - i);
+    const ds = d.toDateString();
+    const h = history.find(x => x.date === ds);
+    const xp = (h ? h.xp : 0) + (i === 0 ? (state.todayXp||0) : 0);
+    recent7.push({ label: ['일','월','화','수','목','금','토'][d.getDay()], xp });
+  }
+  const maxXp = Math.max(...recent7.map(d => d.xp), 1);
+  // SM-2 복습 대기
+  let hw = [];
+  try { hw = JSON.parse(localStorage.getItem('jayHardWords')||'[]'); } catch {}
+  const dueCnt = hw.filter(w => !w.nextReview || w.nextReview <= Date.now()).length;
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;">
+      <div style="text-align:center;background:var(--surface);border-radius:12px;padding:10px;">
+        <div style="font-size:22px;font-weight:800;color:var(--accent)">${monthPages}</div>
+        <div style="font-size:10px;color:var(--text-muted)">이번 달 페이지</div>
+      </div>
+      <div style="text-align:center;background:var(--surface);border-radius:12px;padding:10px;">
+        <div style="font-size:22px;font-weight:800;color:var(--primary)">${monthSessions}</div>
+        <div style="font-size:10px;color:var(--text-muted)">읽기 세션</div>
+      </div>
+      <div style="text-align:center;background:var(--surface);border-radius:12px;padding:10px;">
+        <div style="font-size:22px;font-weight:800;color:var(--success)">${dueCnt}</div>
+        <div style="font-size:10px;color:var(--text-muted)">복습 대기 단어</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">최근 7일 XP</div>
+    <div class="analytics-bar-wrap">
+      ${recent7.map(d => `
+        <div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:2px;">
+          <div class="analytics-bar" style="height:${Math.max(4,Math.round(d.xp/maxXp*56))}px;opacity:${d.xp>0?1:0.2};"></div>
+          <div style="font-size:9px;color:var(--text-muted)">${d.label}</div>
+        </div>`).join('')}
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);margin-top:8px;">일 평균 읽기: <b style="color:var(--text)">${avgPages}페이지</b> · 이번 달 ${monthSessions}회 세션</div>
+  `;
 }
 
 function renderQuestSteps() {
@@ -1128,7 +1483,14 @@ function completeListen() {
 let wsIdx=0, wsKnown=0, wsWords=[];
 
 function initWordScout() {
-  wsWords = getWords(); wsIdx=0; wsKnown=0;
+  const allWords = getWords();
+  const hardWords = getHardWords();
+  const now = Date.now();
+  // SM-2 복습 예정 단어 (nextReview <= 지금) 우선, 그 다음 오늘의 새 단어
+  const dueReviews = hardWords.filter(w => !w.nextReview || w.nextReview <= now);
+  const rest = allWords.filter(w => !dueReviews.find(h => h.word === w.word));
+  wsWords = [...dueReviews, ...rest];
+  wsIdx=0; wsKnown=0;
   const noWords = document.getElementById('no-words-state');
   const active   = document.getElementById('wordscout-active');
   const done     = document.getElementById('wordscout-done');
@@ -1148,13 +1510,42 @@ function showWsCard() {
   document.getElementById('ws-hint').textContent = '';
   document.getElementById('ws-current').textContent = wsIdx+1;
   document.getElementById('flipCard').classList.remove('flipped');
+  // SM-2 다음 복습 예고 표시
+  const reviewEl = document.getElementById('ws-next-review');
+  if (reviewEl) reviewEl.textContent = w.interval ? sm2NextReviewLabel(w) : '처음 만나는 단어';
 }
 function flipCard() { document.getElementById('flipCard').classList.toggle('flipped'); }
-function wsNext(known) {
-  if (known) wsKnown++;
+function wsRate(quality) {
+  // quality: 0=Again, 1=Hard, 2=Good, 3=Easy
+  const cur = wsWords[wsIdx];
+  if (!cur) return;
+  const hw = getHardWords();
+  const existing = hw.find(w => w.word === cur.word);
+  const updated = sm2Update(existing || cur, quality);
+  if (quality <= 1) {
+    // Again/Hard → 어려운 단어 목록에 유지/추가
+    if (existing) {
+      const idx = hw.indexOf(existing);
+      hw[idx] = updated;
+    } else {
+      hw.push(updated);
+      if (hw.length > 20) hw.shift();
+    }
+    saveHardWords(hw);
+  } else {
+    // Good/Easy → 복습 날짜 업데이트, 목록에서 제거하지 않음(복습 스케줄 유지)
+    if (existing) {
+      const idx = hw.indexOf(existing);
+      hw[idx] = updated;
+      saveHardWords(hw);
+    }
+    wsKnown++;
+  }
   wsIdx++; renderWsDots();
   wsIdx>=wsWords.length ? showWsDone() : showWsCard();
 }
+// 이전 버전 호환 (혹시 다른 곳에서 호출될 경우)
+function wsNext(known) { wsRate(known ? 2 : 1); }
 function renderWsDots() {
   const c = document.getElementById('ws-dots');
   c.innerHTML = '';
@@ -1182,8 +1573,10 @@ function wsRestart() {
 // ──────────────────────────────────────────
 // READING TIMER
 // ──────────────────────────────────────────
-let timerInterval=null, timerSec=900, timerRunning=false;
-const TIMER_TOTAL=900;
+let timerInterval=null, timerRunning=false;
+function getTimerTotal() { return ((getState().settings.timerMins||15)*60); }
+let timerSec=900;
+const TIMER_TOTAL=900; // fallback (실제 값은 getTimerTotal() 사용)
 let listeningMode=false;
 
 function extractYouTubeId(url) {
@@ -1286,6 +1679,18 @@ function updateReading() {
   document.getElementById('reading-book-title').textContent = state.settings.bookTitle||'Nate the Great Lost List';
   document.getElementById('reading-chapter-info').textContent = isFollow ? '오디오 들으면서 눈으로 따라가기 👀' : (state.settings.chapter||'');
 
+  // 가이드 카드 + 문장 네비 표시/숨김
+  document.getElementById('solo-guide-card').style.display = isFollow ? 'none' : 'block';
+  document.getElementById('follow-guide-card').style.display = isFollow ? 'block' : 'none';
+  const sentNavEl = document.getElementById('sentence-nav');
+  const sents = state.settings.keySentences || [];
+  if (isFollow && sents.length > 0) {
+    sentNavEl.style.display = 'block';
+    initSentNav(sents);
+  } else {
+    sentNavEl.style.display = 'none';
+  }
+
   // 완료 여부
   const alreadyDone = isFollow ? state.todayFollowRead : state.todayReading;
   const startBtn = document.getElementById('timer-start-btn');
@@ -1294,7 +1699,7 @@ function updateReading() {
     document.getElementById('reading-complete-btn').style.display='none';
   } else {
     startBtn.textContent='▶ 시작'; startBtn.disabled=false;
-    timerSec=900; timerRunning=false;
+    timerSec=getTimerTotal(); timerRunning=false;
     updateTimerDisplay();
   }
   updateUnknownDisplay();
@@ -1321,7 +1726,7 @@ function timerToggle() {
   }
 }
 function timerReset() {
-  clearInterval(timerInterval); timerRunning=false; timerSec=TIMER_TOTAL;
+  clearInterval(timerInterval); timerRunning=false; timerSec=getTimerTotal();
   document.getElementById('timer-start-btn').innerHTML='▶ 시작';
   document.getElementById('timer-start-btn').disabled=false;
   document.getElementById('reading-complete-btn').style.display='none';
@@ -1330,7 +1735,7 @@ function timerReset() {
 function updateTimerDisplay() {
   const m=Math.floor(timerSec/60), s=timerSec%60;
   document.getElementById('timer-display').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
-  const offset=553*(1-timerSec/TIMER_TOTAL);
+  const offset=553*(1-timerSec/getTimerTotal());
   document.getElementById('timerRingProgress').style.strokeDashoffset=offset;
 }
 function completeReading() {
@@ -1591,6 +1996,7 @@ function updateTrophy() {
   document.getElementById('book-progress-bar').style.width=bookPct+'%';
   document.getElementById('book-progress-pages').textContent=currentPage+' / '+(totalPages||'?')+' 페이지';
   document.getElementById('book-progress-pct').textContent=bookPct+'%';
+  renderBadges();
 }
 
 // ──────────────────────────────────────────
@@ -1620,13 +2026,51 @@ function pinDelete(){pinBuffer=pinBuffer.slice(0,-1);updatePinDots();}
 function pinCancel(){pinBuffer='';updatePinDots();document.getElementById('pinScreen').classList.remove('show');}
 function updatePinDots(){for(let i=0;i<4;i++){const d=document.getElementById('dot'+i);d.className='pin-dot'+(i<pinBuffer.length?' filled':'');}}
 function lockMomMode(){momUnlocked=false;navigate('home');}
+function renderMomHardWords() {
+  const hw = getHardWords();
+  const el = document.getElementById('mom-hard-words');
+  if (!hw.length) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--text-muted)">없어요! Jay가 모든 단어를 잘 알고 있어요 🎉</div>';
+    return;
+  }
+  const now = Date.now();
+  el.innerHTML = hw.map((w, i) => {
+    const isDue = !w.nextReview || w.nextReview <= now;
+    const nextLabel = w.interval ? sm2NextReviewLabel(w) : '오늘';
+    const dueColor = isDue ? 'var(--danger)' : 'var(--text-muted)';
+    return `
+    <div class="word-item">
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:700;">${w.word}</div>
+        <div style="font-size:12px;color:var(--text-muted);">${w.meaning}</div>
+        <div style="font-size:11px;color:${dueColor};margin-top:2px;">🔁 복습: ${isDue ? '오늘 예정' : nextLabel} · ${w.interval||1}일 간격</div>
+      </div>
+      <button class="delete-btn" onclick="deleteHardWord(${i})">✕</button>
+    </div>`;
+  }).join('') +
+    `<button class="btn btn-outline" onclick="clearHardWords()" style="margin-top:8px;font-size:13px;padding:8px;">🗑️ 전체 초기화</button>`;
+}
+function deleteHardWord(i) {
+  const hw = getHardWords();
+  hw.splice(i, 1);
+  saveHardWords(hw);
+  renderMomHardWords();
+}
+function clearHardWords() {
+  if (confirm('어려운 단어 목록을 전체 초기화할까요?')) {
+    saveHardWords([]);
+    renderMomHardWords();
+  }
+}
 function updateMomMode(){
   state=getState();
   document.getElementById('mom-book-title').value=state.settings.bookTitle||'';
   document.getElementById('mom-chapter').value=state.settings.chapter||'';
   document.getElementById('mom-total-pages').value=state.settings.bookTotalPages||'';
   document.getElementById('mom-audio-url').value=state.settings.audioUrl||'';
-  renderMomWordList(); renderMomUnknownWords(); renderMomSubmissions(); renderMomReadingLog();
+  document.getElementById('mom-timer-mins').value=state.settings.timerMins||15;
+  document.getElementById('mom-sentences').value=(state.settings.keySentences||[]).join('\n');
+  renderMomWordList(); renderMomUnknownWords(); renderMomSubmissions(); renderMomReadingLog(); renderMomHardWords(); renderMomAnalytics();
 }
 function renderMomSubmissions(){
   state=getState();
@@ -1674,7 +2118,16 @@ function saveBookSettings(){
   state.settings.chapter=document.getElementById('mom-chapter').value;
   state.settings.bookTotalPages=parseInt(document.getElementById('mom-total-pages').value)||0;
   state.settings.audioUrl=document.getElementById('mom-audio-url').value.trim();
+  state.settings.timerMins=parseInt(document.getElementById('mom-timer-mins').value)||15;
   saveState(state); alert('저장됐어요! ✅');
+}
+function saveSentences(){
+  const raw=document.getElementById('mom-sentences').value;
+  const sents=raw.split('\n').map(s=>s.trim()).filter(s=>s.length>0);
+  state=getState();
+  state.settings.keySentences=sents;
+  saveState(state);
+  alert(`${sents.length}개 문장 저장됐어요! ✅`);
 }
 function addWord(){
   const word=document.getElementById('mom-word').value.trim();
@@ -1753,6 +2206,17 @@ function checkPendingRewards(){
   s.notified=true;
   saveState(state);
   document.getElementById('praisePopupXp').textContent='+'+totalXp+' XP';
+  // 미션 제목
+  const missionEl=document.getElementById('praisePopupMission');
+  if(s.missionTitle){missionEl.textContent=s.missionEmoji+' '+s.missionTitle;missionEl.style.display='block';}
+  else{missionEl.style.display='none';}
+  // 별점 (bonusXp 기준: 5→⭐, 10→⭐⭐, 15→⭐⭐⭐, 20→⭐⭐⭐⭐)
+  const starsEl=document.getElementById('praisePopupStars');
+  if(s.bonusXp>0){
+    const starCount=Math.ceil(s.bonusXp/5);
+    starsEl.textContent='⭐'.repeat(Math.min(starCount,4));
+    starsEl.style.display='block';
+  } else {starsEl.style.display='none';}
   const msgEl=document.getElementById('praisePopupMsg');
   if(s.praiseMsg){msgEl.textContent='"'+s.praiseMsg+'"';msgEl.style.display='block';}
   else{msgEl.style.display='none';}
@@ -1765,6 +2229,40 @@ function closePraisePopup(){
   document.getElementById('praisePopup').classList.remove('show');
   updateHome();
   setTimeout(checkPendingRewards,400);
+}
+
+// ──────────────────────────────────────────
+// BACKUP / RESTORE
+// ──────────────────────────────────────────
+function backupData() {
+  const data = {
+    jayState:    localStorage.getItem('jayState'),
+    jayWords:    localStorage.getItem('jayWords'),
+    jayHardWords: localStorage.getItem('jayHardWords'),
+    exportedAt:  new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `jay-english-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+function restoreData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.jayState)     localStorage.setItem('jayState', data.jayState);
+      if (data.jayWords)     localStorage.setItem('jayWords', data.jayWords);
+      if (data.jayHardWords) localStorage.setItem('jayHardWords', data.jayHardWords);
+      state = getState();
+      alert('복원 완료! ✅\n페이지를 새로고침할게요.');
+      location.reload();
+    } catch { alert('파일을 읽을 수 없어요. 올바른 백업 파일인지 확인해주세요.'); }
+  };
+  reader.readAsText(file);
 }
 
 // ──────────────────────────────────────────
