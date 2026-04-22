@@ -1487,13 +1487,13 @@ function initListen() {
     playerArea.innerHTML = `
       <div class="card" style="padding:10px;margin-bottom:8px;">
         <div style="font-size:12px;color:var(--primary);font-weight:600;margin-bottom:8px;">🎧 오디오북</div>
-        <div style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer;" onclick="window.open('${ytUrl}','_blank')">
+        <div style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer;" onclick="openExternal('${ytUrl}')">
           <img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg" style="width:100%;display:block;border-radius:10px;">
           <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.7);border-radius:50%;width:56px;height:56px;display:flex;align-items:center;justify-content:center;">
             <span style="color:white;font-size:24px;margin-left:4px;">▶</span>
           </div>
         </div>
-        <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="window.open('${ytUrl}','_blank')">▶ YouTube에서 재생하기</button>
+        <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="openExternal('${ytUrl}')">▶ YouTube에서 재생하기</button>
       </div>`;
   } else {
     const bookTitle = encodeURIComponent((state.settings.bookTitle||'Nate the Great Lost List')+' read aloud audiobook');
@@ -1501,7 +1501,7 @@ function initListen() {
       <div class="card" style="padding:14px;margin-bottom:8px;">
         <div style="font-size:13px;font-weight:700;margin-bottom:10px;">오디오북 URL이 없어요</div>
         <button class="btn btn-primary" style="width:100%;margin-bottom:8px;"
-          onclick="window.open('https://www.youtube.com/results?search_query=${bookTitle}','_blank')">
+          onclick="openExternal('https://www.youtube.com/results?search_query=${bookTitle}')">
           🔍 YouTube에서 찾기
         </button>
         <div style="font-size:12px;color:var(--text-muted);">엄마한테 설정해달라고 말해줘!</div>
@@ -1621,6 +1621,16 @@ let timerSec=900;
 const TIMER_TOTAL=900; // fallback (실제 값은 getTimerTotal() 사용)
 let listeningMode=false;
 
+function openExternal(url) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => document.body.removeChild(a), 100);
+}
+
 function extractYouTubeId(url) {
   if(!url) return null;
   const watchMatch=url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
@@ -1642,17 +1652,17 @@ function renderYouTubePlayer() {
     playerDiv.innerHTML=`
       <div class="card" style="padding:10px;">
         <div style="font-size:12px;color:var(--primary);font-weight:600;margin-bottom:8px;">🎧 오디오북 재생</div>
-        <div style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer;" onclick="window.open('${ytUrl}','_blank')">
+        <div style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer;" onclick="openExternal('${ytUrl}')">
           <img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg" style="width:100%;display:block;border-radius:10px;">
           <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.7);border-radius:50%;width:56px;height:56px;display:flex;align-items:center;justify-content:center;">
             <span style="color:white;font-size:24px;margin-left:4px;">▶</span>
           </div>
         </div>
-        <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="window.open('${ytUrl}','_blank')">▶ YouTube에서 재생하기</button>
+        <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="openExternal('${ytUrl}')">▶ YouTube에서 재생하기</button>
       </div>`;
   } else if(url) {
     playerDiv.style.display='block';
-    playerDiv.innerHTML=`<button class="btn btn-primary" style="width:100%;" onclick="window.open('${url}','_blank')">🎧 음원 재생하기 (새 탭)</button>`;
+    playerDiv.innerHTML=`<button class="btn btn-primary" style="width:100%;" onclick="openExternal('${url}')">🎧 음원 재생하기 (새 탭)</button>`;
   } else {
     // URL 미설정: 자동 검색 + 인라인 URL 입력
     state=getState();
@@ -1663,7 +1673,7 @@ function renderYouTubePlayer() {
       <div class="card" style="padding:14px;">
         <div style="font-size:13px;font-weight:700;margin-bottom:10px;">🎧 오디오북 음원 설정</div>
         <button class="btn btn-primary" style="width:100%;margin-bottom:12px;"
-          onclick="window.open('${ytSearchUrl}','_blank')">
+          onclick="openExternal('${ytSearchUrl}')">
           🔍 YouTube에서 자동 검색
         </button>
         <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">
