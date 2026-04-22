@@ -376,6 +376,18 @@ const QUESTIONS = {
   ]
 };
 
+// 커스텀 퀴즈 로드 (엄마 모드에서 AI 생성한 경우 덮어씀)
+(function() {
+  try {
+    const cq = JSON.parse(localStorage.getItem('customQuestions'));
+    if(cq && cq.easy && cq.medium && cq.hard) {
+      QUESTIONS.easy = cq.easy.map(q=>({q:q.q, choices:q.choices, ans:q.ans}));
+      QUESTIONS.medium = cq.medium.map(q=>({q:q.q, choices:q.choices, ans:q.ans}));
+      QUESTIONS.hard = cq.hard.map(q=>({q:q.q, choices:q.choices, ans:q.ans}));
+    }
+  } catch(e) {}
+})();
+
 // ══════════════════════════════════════════
 // BOSSES
 // ══════════════════════════════════════════

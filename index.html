@@ -859,6 +859,16 @@
   </div>
 
   <div class="card">
+    <div style="font-size:15px;font-weight:700;margin-bottom:8px;">🤖 보스 배틀 퀴즈 자동 생성</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">책 제목 저장 후 아래 버튼으로 AI 퀴즈를 생성하세요</div>
+    <label class="mom-label">Gemini API 키</label>
+    <input class="mom-input" id="gemini-api-key" type="password" placeholder="AIza...">
+    <div style="font-size:11px;color:var(--text-muted);margin-top:-8px;margin-bottom:12px;">aistudio.google.com 에서 무료 발급 · 기기에만 저장됨</div>
+    <button class="btn btn-accent" id="gen-quiz-btn" onclick="generateQuizWithGemini()">✨ 퀴즈 자동 생성</button>
+    <div id="gen-quiz-status" style="margin-top:10px;font-size:13px;"></div>
+  </div>
+
+  <div class="card">
     <div style="font-size:15px;font-weight:700;margin-bottom:4px;">📖 따라 읽기 문장 입력</div>
     <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">오늘 Jay가 따라 읽을 문장을 한 줄에 하나씩 입력해주세요</div>
     <textarea class="mom-input" id="mom-sentences" rows="5"
@@ -2149,7 +2159,54 @@ function updateMomMode(){
   document.getElementById('mom-audio-url').value=state.settings.audioUrl||'';
   document.getElementById('mom-timer-mins').value=state.settings.timerMins||15;
   document.getElementById('mom-sentences').value=(state.settings.keySentences||[]).join('\n');
+  const savedKey=localStorage.getItem('geminiApiKey')||'';
+  document.getElementById('gemini-api-key').value=savedKey;
+  const cq=JSON.parse(localStorage.getItem('customQuestions')||'null');
+  const statusEl=document.getElementById('gen-quiz-status');
+  if(cq) statusEl.innerHTML=`<span style="color:var(--accent)">✅ 퀴즈 ${cq.easy.length+cq.medium.length+cq.hard.length}개 생성됨</span>`;
   renderMomWordList(); renderMomUnknownWords(); renderMomSubmissions(); renderMomReadingLog(); renderMomFollowReadLog(); renderMomHardWords(); renderMomAnalytics();
+}
+
+async function generateQuizWithGemini() {
+  const apiKey = document.getElementById('gemini-api-key').value.trim();
+  if(!apiKey){alert('Gemini API 키를 입력해주세요');return;}
+  localStorage.setItem('geminiApiKey', apiKey);
+  const state=getState();
+  const book=state.settings.bookTitle||'Nate the Great';
+  const chapter=state.settings.chapter||'';
+  const statusEl=document.getElementById('gen-quiz-status');
+  const btn=document.getElementById('gen-quiz-btn');
+  btn.disabled=true; btn.textContent='⏳ 생성 중...';
+  statusEl.innerHTML='';
+  const prompt=`You are making English reading comprehension quiz for a Korean elementary school student (grade 5, AR level 3.5).
+Book: "${book}"${chapter?' Chapter/section: '+chapter:''}
+
+Create 9 multiple-choice questions in this exact JSON format (no markdown, just JSON):
+{"easy":[...],"medium":[...],"hard":[...]}
+
+Each difficulty has 3 questions. Each question:
+{"q":"question text","choices":["A","B","C","D"],"ans":0}
+ans is the index (0-3) of the correct answer.
+
+Easy: basic who/what/where. Medium: why/how. Hard: inference/theme.
+Keep questions in English, appropriate for the reading level.`;
+  try {
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.7,responseMimeType:'application/json'}})
+    });
+    const data=await res.json();
+    if(data.error){throw new Error(data.error.message);}
+    const text=data.candidates[0].content.parts[0].text;
+    const parsed=JSON.parse(text);
+    if(!parsed.easy||!parsed.medium||!parsed.hard)throw new Error('형식 오류');
+    localStorage.setItem('customQuestions',JSON.stringify(parsed));
+    statusEl.innerHTML=`<span style="color:var(--accent)">✅ "${book}" 퀴즈 생성 완료! (${parsed.easy.length+parsed.medium.length+parsed.hard.length}문제)</span>`;
+  } catch(e) {
+    statusEl.innerHTML=`<span style="color:#e53e3e">❌ 오류: ${e.message}</span>`;
+  }
+  btn.disabled=false; btn.textContent='✨ 퀴즈 자동 생성';
 }
 function renderMomSubmissions(){
   state=getState();
