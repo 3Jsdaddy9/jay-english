@@ -1483,15 +1483,17 @@ function initListen() {
   const url     = state.settings.audioUrl || '';
   const videoId = extractYouTubeId(url);
   if (videoId) {
+    const ytUrl = `https://www.youtube.com/watch?v=${videoId}`;
     playerArea.innerHTML = `
       <div class="card" style="padding:10px;margin-bottom:8px;">
         <div style="font-size:12px;color:var(--primary);font-weight:600;margin-bottom:8px;">🎧 오디오북</div>
-        <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:10px;">
-          <iframe src="https://www.youtube.com/embed/${videoId}?playsinline=1&rel=0&autoplay=0"
-            style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen loading="lazy"></iframe>
+        <div style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer;" onclick="window.open('${ytUrl}','_blank')">
+          <img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg" style="width:100%;display:block;border-radius:10px;">
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.7);border-radius:50%;width:56px;height:56px;display:flex;align-items:center;justify-content:center;">
+            <span style="color:white;font-size:24px;margin-left:4px;">▶</span>
+          </div>
         </div>
+        <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="window.open('${ytUrl}','_blank')">▶ YouTube에서 재생하기</button>
       </div>`;
   } else {
     const bookTitle = encodeURIComponent((state.settings.bookTitle||'Nate the Great Lost List')+' read aloud audiobook');
@@ -1635,22 +1637,22 @@ function renderYouTubePlayer() {
   const url=state.settings.audioUrl||'';
   const videoId=extractYouTubeId(url);
   if(videoId) {
+    const ytUrl=`https://www.youtube.com/watch?v=${videoId}`;
     playerDiv.style.display='block';
     playerDiv.innerHTML=`
       <div class="card" style="padding:10px;">
         <div style="font-size:12px;color:var(--primary);font-weight:600;margin-bottom:8px;">🎧 오디오북 재생</div>
-        <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:10px;">
-          <iframe
-            src="https://www.youtube.com/embed/${videoId}?playsinline=1&rel=0"
-            style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen loading="lazy">
-          </iframe>
+        <div style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer;" onclick="window.open('${ytUrl}','_blank')">
+          <img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg" style="width:100%;display:block;border-radius:10px;">
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.7);border-radius:50%;width:56px;height:56px;display:flex;align-items:center;justify-content:center;">
+            <span style="color:white;font-size:24px;margin-left:4px;">▶</span>
+          </div>
         </div>
+        <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="window.open('${ytUrl}','_blank')">▶ YouTube에서 재생하기</button>
       </div>`;
   } else if(url) {
     playerDiv.style.display='block';
-    playerDiv.innerHTML=`<a href="${url}" target="_blank" class="btn btn-primary" style="text-decoration:none;display:flex;">🎧 음원 재생하기 (새 탭)</a>`;
+    playerDiv.innerHTML=`<button class="btn btn-primary" style="width:100%;" onclick="window.open('${url}','_blank')">🎧 음원 재생하기 (새 탭)</button>`;
   } else {
     // URL 미설정: 자동 검색 + 인라인 URL 입력
     state=getState();
