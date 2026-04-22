@@ -1498,10 +1498,10 @@ function initListen() {
     playerArea.innerHTML = `
       <div class="card" style="padding:14px;margin-bottom:8px;">
         <div style="font-size:13px;font-weight:700;margin-bottom:10px;">오디오북 URL이 없어요</div>
-        <a href="https://www.youtube.com/results?search_query=${bookTitle}" target="_blank"
-          class="btn btn-primary" style="text-decoration:none;display:flex;margin-bottom:8px;">
+        <button class="btn btn-primary" style="width:100%;margin-bottom:8px;"
+          onclick="window.open('https://www.youtube.com/results?search_query=${bookTitle}','_blank')">
           🔍 YouTube에서 찾기
-        </a>
+        </button>
         <div style="font-size:12px;color:var(--text-muted);">엄마한테 설정해달라고 말해줘!</div>
       </div>`;
   }
@@ -1660,9 +1660,10 @@ function renderYouTubePlayer() {
     playerDiv.innerHTML=`
       <div class="card" style="padding:14px;">
         <div style="font-size:13px;font-weight:700;margin-bottom:10px;">🎧 오디오북 음원 설정</div>
-        <a href="${ytSearchUrl}" target="_blank" class="btn btn-primary" style="text-decoration:none;display:flex;margin-bottom:12px;">
+        <button class="btn btn-primary" style="width:100%;margin-bottom:12px;"
+          onclick="window.open('${ytSearchUrl}','_blank')">
           🔍 YouTube에서 자동 검색
-        </a>
+        </button>
         <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">
           영상 찾으면 URL 복사 후 아래 붙여넣기:
         </div>
