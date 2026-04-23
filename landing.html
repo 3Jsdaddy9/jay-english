@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jay's English Quest — 3D Adventure</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --gold: #FFD700;
+      --gold-dim: rgba(255,215,0,0.15);
+      --bg: #060618;
+      --blue-mid: #0d0d40;
+      --blue-accent: #00BFFF;
+      --purple: #7B3FE4;
+      --red-boss: #FF3A20;
+      --card-bg: rgba(10,20,70,0.85);
+      --text: #ffffff;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      overflow-x: hidden;
+    }
+
+    #bg {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    main { position: relative; z-index: 1; }
+
+    /* ── QUEST MAP NAV ── */
+    .quest-map {
+      position: fixed;
+      right: 1.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .map-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,215,0,0.4);
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .map-dot.active {
+      background: var(--gold);
+      transform: scale(1.6);
+      box-shadow: 0 0 12px var(--gold);
+    }
+
+    /* ── HERO ── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      position: relative;
+      background: radial-gradient(ellipse at 50% 60%, rgba(30,0,100,0.5) 0%, transparent 70%);
+    }
+
+    .hero-badge {
+      display: inline-block;
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.5em;
+      color: var(--bg);
+      background: linear-gradient(90deg, var(--gold), #FFA500);
+      padding: 0.45em 1.8em;
+      border-radius: 2em;
+      margin-bottom: 2rem;
+      font-weight: 700;
+      box-shadow: 0 0 20px rgba(255,215,0,0.4);
+    }
+
+    .hero-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(2.8rem, 9vw, 7rem);
+      line-height: 1.05;
+      background: linear-gradient(160deg, var(--gold) 20%, #fff 55%, var(--gold) 85%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 40px rgba(255,215,0,0.6));
+      margin-bottom: 1.2rem;
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2.5vw, 1.4rem);
+      color: var(--blue-accent);
+      letter-spacing: 0.08em;
+      margin-bottom: 2.5rem;
+    }
+
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: linear-gradient(135deg, var(--gold) 0%, #FFA500 100%);
+      color: #060618;
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 1em 2.8em;
+      border-radius: 3em;
+      text-decoration: none;
+      box-shadow: 0 0 30px rgba(255,215,0,0.45), 0 8px 24px rgba(0,0,0,0.5);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .hero-cta:hover {
+      transform: translateY(-4px) scale(1.04);
+      box-shadow: 0 0 60px rgba(255,215,0,0.7), 0 12px 32px rgba(0,0,0,0.5);
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.35);
+      letter-spacing: 0.25em;
+      animation: floatHint 2.5s ease-in-out infinite;
+    }
+
+    @keyframes floatHint {
+      0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.35; }
+      50%       { transform: translateX(-50%) translateY(-10px); opacity: 0.6; }
+    }
+
+    /* ── SHARED SECTION STYLES ── */
+    .quest-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 5rem 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stage-tag {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.6em;
+      color: var(--gold);
+      opacity: 0.75;
+      margin-bottom: 0.8rem;
+    }
+
+    .section-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(1.8rem, 5.5vw, 3.8rem);
+      margin-bottom: 0.8rem;
+      text-align: center;
+    }
+
+    .section-desc {
+      font-size: clamp(0.95rem, 2vw, 1.1rem);
+      color: rgba(255,255,255,0.65);
+      text-align: center;
+      max-width: 480px;
+      margin-bottom: 3rem;
+      line-height: 1.8;
+    }
+
+    /* ── STAGE 1: WORD CARDS ── */
+    #word-scout {
+      background: radial-gradient(ellipse at 30% 50%, rgba(20,0,80,0.4) 0%, transparent 65%);
+    }
+
+    .word-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.2rem;
+      max-width: 680px;
+      width: 100%;
+      perspective: 800px;
+    }
+
+    .word-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255,215,0,0.25);
+      border-radius: 14px;
+      padding: 1.4rem 1.2rem;
+      text-align: center;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.07);
+      cursor: default;
+      transition: transform 0.35s cubic-bezier(.175,.885,.32,1.275), box-shadow 0.35s;
+      will-change: transform;
+    }
+
+    .word-card:hover {
+      transform: translateY(-10px) rotateX(8deg) scale(1.04);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 25px rgba(255,215,0,0.25);
+    }
+
+    .word-card .en {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--gold);
+    }
+
+    .word-card .ko {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.5);
+      margin-top: 0.4rem;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── STAGE 2: AUDIO ── */
+    #audio-quest {
+      background: radial-gradient(ellipse at 70% 50%, rgba(0,30,80,0.5) 0%, transparent 65%);
+    }
+
+    .wave-wrap {
+      display: flex;
+      align-items: flex-end;
+      gap: 5px;
+      height: 100px;
+      margin-bottom: 1.5rem;
+    }
+
+    .wave-bar {
+      width: 10px;
+      border-radius: 5px;
+      background: linear-gradient(to top, var(--blue-accent), var(--gold));
+      transform-origin: bottom;
+      animation: waveAnim 1.2s ease-in-out infinite;
+    }
+
+    @keyframes waveAnim {
+      0%, 100% { transform: scaleY(0.25); opacity: 0.6; }
+      50%       { transform: scaleY(1);    opacity: 1; }
+    }
+
+    .audio-label {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.4);
+      letter-spacing: 0.15em;
+    }
+
+    /* ── STAGE 3: MIC ── */
+    #read-aloud {
+      background: radial-gradient(ellipse at 50% 40%, rgba(0,100,80,0.2) 0%, transparent 65%);
+    }
+
+    .mic-wrap {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .mic-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid rgba(0,191,255,0.35);
+      animation: ringPulse 2.4s ease-out infinite;
+    }
+
+    .mic-ring:nth-child(2) { animation-delay: 0.8s; }
+    .mic-ring:nth-child(3) { animation-delay: 1.6s; }
+
+    @keyframes ringPulse {
+      0%   { transform: scale(0.5); opacity: 0.8; }
+      100% { transform: scale(1.8); opacity: 0; }
+    }
+
+    .mic-icon {
+      font-size: 5rem;
+      position: relative;
+      z-index: 1;
+      animation: micGlow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes micGlow {
+      from { filter: drop-shadow(0 0 15px rgba(0,191,255,0.5)); }
+      to   { filter: drop-shadow(0 0 40px rgba(0,191,255,1)) drop-shadow(0 0 70px rgba(0,191,255,0.4)); }
+    }
+
+    .read-goal {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--blue-accent);
+      letter-spacing: 0.05em;
+    }
+
+    /* ── STAGE 4: BOSS ── */
+    #boss-battle {
+      background: radial-gradient(ellipse at 50% 55%, rgba(100,0,0,0.35) 0%, rgba(60,0,120,0.2) 50%, transparent 75%);
+    }
+
+    .boss-arena {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 240px;
+      height: 200px;
+      margin-bottom: 2rem;
+    }
+
+    .boss-glow {
+      position: absolute;
+      inset: -20px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(255,50,0,0.25) 0%, transparent 70%);
+      animation: bossAura 2.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes bossAura {
+      from { transform: scale(0.9); opacity: 0.6; }
+      to   { transform: scale(1.15); opacity: 1; }
+    }
+
+    .boss-icon {
+      font-size: 7rem;
+      position: relative;
+      z-index: 2;
+      animation: bossFloat 3.5s ease-in-out infinite;
+    }
+
+    @keyframes bossFloat {
+      0%, 100% { transform: translateY(0)    rotate(-4deg); }
+      50%       { transform: translateY(-22px) rotate(4deg); }
+    }
+
+    .lightning {
+      position: absolute;
+      font-size: 2.5rem;
+      z-index: 3;
+      animation: boltFlash 0.7s ease-in-out infinite;
+    }
+
+    .lightning:nth-child(2) { left: -10px; top: 10px; animation-delay: 0s; }
+    .lightning:nth-child(3) { right: -10px; top: 30px; animation-delay: 0.35s; }
+
+    @keyframes boltFlash {
+      0%, 100% { opacity: 1; transform: scale(1) rotate(-10deg); }
+      50%       { opacity: 0.25; transform: scale(1.4) rotate(15deg); }
+    }
+
+    .final-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      background: linear-gradient(135deg, #FF4500 0%, #CC0000 100%);
+      color: #fff;
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 1.1em 3em;
+      border-radius: 3em;
+      text-decoration: none;
+      box-shadow: 0 0 40px rgba(255,69,0,0.5), 0 8px 28px rgba(0,0,0,0.5);
+      transition: transform 0.2s, box-shadow 0.2s;
+      animation: ctaPulse 2.2s ease-in-out infinite;
+    }
+
+    @keyframes ctaPulse {
+      0%, 100% { box-shadow: 0 0 40px rgba(255,69,0,0.5), 0 8px 28px rgba(0,0,0,0.5); }
+      50%       { box-shadow: 0 0 80px rgba(255,100,0,0.85), 0 8px 28px rgba(0,0,0,0.5); }
+    }
+
+    .final-cta:hover {
+      transform: translateY(-5px) scale(1.06);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .quest-map { display: none; }
+      .word-grid { grid-template-columns: repeat(2, 1fr); max-width: 340px; }
+      .boss-icon { font-size: 5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<nav class="quest-map" id="questMap">
+  <div class="map-dot active" data-section="hero"       title="Start"></div>
+  <div class="map-dot"        data-section="word-scout"  title="Word Scout"></div>
+  <div class="map-dot"        data-section="audio-quest" title="Audio"></div>
+  <div class="map-dot"        data-section="read-aloud"  title="Read Aloud"></div>
+  <div class="map-dot"        data-section="boss-battle" title="Boss Battle"></div>
+</nav>
+
+<main>
+
+  <!-- ═══ HERO ═══ -->
+  <section id="hero">
+    <div class="hero-badge">⚔ ENGLISH QUEST ⚔</div>
+    <h1 class="hero-title">Jay's<br>English<br>Quest!</h1>
+    <p class="hero-sub">모험을 시작해요 · Let the quest begin!</p>
+    <a href="index.html" class="hero-cta">⚔️ Quest 시작!</a>
+    <span class="scroll-hint">↓ scroll to explore</span>
+  </section>
+
+  <!-- ═══ STAGE 1 · WORD SCOUT ═══ -->
+  <section id="word-scout" class="quest-section">
+    <p class="stage-tag">STAGE 1</p>
+    <h2 class="section-title">Word Scout 🗺️</h2>
+    <p class="section-desc">
+      새로운 단어들을 미리 만나봐요.<br>
+      미리 보면 모르는 단어도 무섭지 않아요!
+    </p>
+    <div class="word-grid">
+      <div class="word-card"><div class="en">adventure</div><div class="ko">모험</div></div>
+      <div class="word-card"><div class="en">mystery</div><div class="ko">미스터리</div></div>
+      <div class="word-card"><div class="en">discover</div><div class="ko">발견하다</div></div>
+      <div class="word-card"><div class="en">brave</div><div class="ko">용감한</div></div>
+      <div class="word-card"><div class="en">explore</div><div class="ko">탐험하다</div></div>
+      <div class="word-card"><div class="en">quest</div><div class="ko">퀘스트</div></div>
+    </div>
+  </section>
+
+  <!-- ═══ STAGE 2 · AUDIO QUEST ═══ -->
+  <section id="audio-quest" class="quest-section">
+    <p class="stage-tag">STAGE 2</p>
+    <h2 class="section-title">Audio Quest 🎧</h2>
+    <p class="section-desc">
+      원어민 발음을 귀로 먼저 들어봐요.<br>
+      소리가 눈에 들어오는 마법!
+    </p>
+    <div class="wave-wrap" id="waveWrap"></div>
+    <p class="audio-label">🎵 Listening mode — activated</p>
+  </section>
+
+  <!-- ═══ STAGE 3 · READ ALOUD ═══ -->
+  <section id="read-aloud" class="quest-section">
+    <p class="stage-tag">STAGE 3</p>
+    <h2 class="section-title">Read Aloud 🎤</h2>
+    <p class="section-desc">
+      이제 나도 따라 읽어봐요!<br>
+      용감하게 소리내서 읽기!
+    </p>
+    <div class="mic-wrap">
+      <div class="mic-ring"></div>
+      <div class="mic-ring"></div>
+      <div class="mic-ring"></div>
+      <div class="mic-icon">🎤</div>
+    </div>
+    <p class="read-goal">🎯 목표: 3회 완독!</p>
+  </section>
+
+  <!-- ═══ STAGE 4 · BOSS BATTLE ═══ -->
+  <section id="boss-battle" class="quest-section">
+    <p class="stage-tag">FINAL STAGE</p>
+    <h2 class="section-title" style="color:#FF5533;">Boss Battle! 🐉</h2>
+    <p class="section-desc">
+      그동안 배운 모든 걸 써봐요.<br>
+      Jay라면 분명 이길 수 있어요!
+    </p>
+    <div class="boss-arena">
+      <div class="boss-glow"></div>
+      <span class="lightning">⚡</span>
+      <span class="boss-icon">🐉</span>
+      <span class="lightning">⚡</span>
+    </div>
+    <a href="index.html" class="final-cta">⚔️ 퀘스트 시작하기!</a>
+  </section>
+
+</main>
+
+<!-- ── CDN ── -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+<script>
+/* ════════════════════════════════════
+   THREE.JS — star particle background
+═══════════════════════════════════════ */
+const canvas   = document.getElementById('bg');
+const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false });
+const scene    = new THREE.Scene();
+const camera   = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.1, 500);
+
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+camera.position.z = 45;
+
+const COUNT = 2800;
+const pos   = new Float32Array(COUNT * 3);
+const col   = new Float32Array(COUNT * 3);
+
+for (let i = 0; i < COUNT; i++) {
+  pos[i*3]   = (Math.random() - 0.5) * 180;
+  pos[i*3+1] = (Math.random() - 0.5) * 180;
+  pos[i*3+2] = (Math.random() - 0.5) * 80 - 5;
+
+  const t = Math.random();
+  if (t < 0.55) {                        // gold stars
+    col[i*3]   = 1;
+    col[i*3+1] = 0.82 + Math.random() * 0.18;
+    col[i*3+2] = Math.random() * 0.2;
+  } else if (t < 0.85) {                 // blue stars
+    col[i*3]   = Math.random() * 0.15;
+    col[i*3+1] = 0.55 + Math.random() * 0.45;
+    col[i*3+2] = 1;
+  } else {                               // white stars
+    col[i*3] = col[i*3+1] = col[i*3+2] = 0.9 + Math.random() * 0.1;
+  }
+}
+
+const geo = new THREE.BufferGeometry();
+geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+geo.setAttribute('color',    new THREE.BufferAttribute(col, 3));
+
+const mat   = new THREE.PointsMaterial({ size: 0.18, vertexColors: true, transparent: true, opacity: 0.85 });
+const stars = new THREE.Points(geo, mat);
+scene.add(stars);
+
+let scrollY = 0, rawScrollY = 0, time = 0;
+window.addEventListener('scroll', () => { rawScrollY = window.scrollY; });
+
+(function loop() {
+  requestAnimationFrame(loop);
+  time += 0.004;
+  scrollY += (rawScrollY - scrollY) * 0.06;
+
+  stars.rotation.y = time * 0.04;
+  stars.rotation.x = time * 0.018;
+  camera.position.y = -scrollY * 0.012;
+
+  renderer.render(scene, camera);
+})();
+
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+/* ════════════════════════════════════
+   SOUND WAVE BARS
+═══════════════════════════════════════ */
+const waveWrap = document.getElementById('waveWrap');
+for (let i = 0; i < 22; i++) {
+  const b = document.createElement('div');
+  b.className = 'wave-bar';
+  b.style.height          = (28 + Math.random() * 72) + 'px';
+  b.style.animationDelay  = (i * 0.07).toFixed(2) + 's';
+  b.style.animationDuration = (0.7 + Math.random() * 0.9).toFixed(2) + 's';
+  waveWrap.appendChild(b);
+}
+
+/* ════════════════════════════════════
+   GSAP SCROLL ANIMATIONS
+═══════════════════════════════════════ */
+gsap.registerPlugin(ScrollTrigger);
+
+// Hero entrance
+const heroTl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+heroTl
+  .from('.hero-badge',  { opacity: 0, y: -24, duration: 0.7, delay: 0.15 })
+  .from('.hero-title',  { opacity: 0, y: 60, duration: 1.1 }, '-=0.3')
+  .from('.hero-sub',    { opacity: 0, y: 28, duration: 0.8 }, '-=0.6')
+  .from('.hero-cta',    { opacity: 0, scale: 0.75, duration: 0.7, ease: 'back.out(1.8)' }, '-=0.4');
+
+// Helper to create scroll-triggered entrance
+function scrollIn(selector, trigger, vars) {
+  gsap.from(selector, {
+    scrollTrigger: { trigger, start: 'top 80%' },
+    ...vars
+  });
+}
+
+// Stage 1 — Word Scout
+scrollIn('#word-scout .stage-tag',    '#word-scout', { opacity: 0, y: -20, duration: 0.55 });
+scrollIn('#word-scout .section-title','#word-scout', { opacity: 0, x: -55, duration: 0.75, delay: 0.1 });
+scrollIn('#word-scout .section-desc', '#word-scout', { opacity: 0, y: 22,  duration: 0.6,  delay: 0.2 });
+gsap.from('.word-card', {
+  scrollTrigger: { trigger: '.word-grid', start: 'top 85%' },
+  opacity: 0, y: 55, rotateX: 25, duration: 0.75,
+  stagger: 0.1, ease: 'back.out(1.6)'
+});
+
+// Stage 2 — Audio Quest
+scrollIn('#audio-quest .stage-tag',    '#audio-quest', { opacity: 0, y: -20, duration: 0.55 });
+scrollIn('#audio-quest .section-title','#audio-quest', { opacity: 0, x: 55,  duration: 0.75, delay: 0.1 });
+scrollIn('#audio-quest .section-desc', '#audio-quest', { opacity: 0, y: 22,  duration: 0.6,  delay: 0.2 });
+gsap.from('.wave-bar', {
+  scrollTrigger: { trigger: '#audio-quest', start: 'top 72%' },
+  scaleY: 0, duration: 0.55, stagger: 0.035,
+  ease: 'elastic.out(1, 0.45)', transformOrigin: 'bottom'
+});
+
+// Stage 3 — Read Aloud
+scrollIn('#read-aloud .stage-tag',    '#read-aloud', { opacity: 0, y: -20, duration: 0.55 });
+scrollIn('#read-aloud .section-title','#read-aloud', { opacity: 0, scale: 0.65, duration: 0.8, delay: 0.1, ease: 'back.out(1.6)' });
+scrollIn('#read-aloud .section-desc', '#read-aloud', { opacity: 0, y: 22,  duration: 0.6, delay: 0.2 });
+gsap.from('.mic-wrap', {
+  scrollTrigger: { trigger: '#read-aloud', start: 'top 72%' },
+  opacity: 0, scale: 0.25, duration: 1.2, ease: 'elastic.out(1, 0.45)'
+});
+
+// Stage 4 — Boss Battle
+scrollIn('#boss-battle .stage-tag',    '#boss-battle', { opacity: 0, y: -20, duration: 0.55 });
+scrollIn('#boss-battle .section-title','#boss-battle', { opacity: 0, scale: 1.5, duration: 0.9, delay: 0.1, ease: 'power4.out' });
+scrollIn('#boss-battle .section-desc', '#boss-battle', { opacity: 0, y: 22, duration: 0.6, delay: 0.2 });
+gsap.from('.boss-icon', {
+  scrollTrigger: { trigger: '#boss-battle', start: 'top 72%' },
+  opacity: 0, y: -90, rotation: 25, duration: 1.3, ease: 'bounce.out'
+});
+gsap.from('.lightning', {
+  scrollTrigger: { trigger: '#boss-battle', start: 'top 72%' },
+  opacity: 0, scale: 0, duration: 0.45, stagger: 0.18,
+  delay: 0.55, ease: 'back.out(2)'
+});
+gsap.from('.final-cta', {
+  scrollTrigger: { trigger: '#boss-battle', start: 'top 62%' },
+  opacity: 0, y: 40, scale: 0.8, duration: 0.8, delay: 0.85, ease: 'back.out(1.7)'
+});
+
+/* ════════════════════════════════════
+   QUEST MAP — active dot on scroll
+═══════════════════════════════════════ */
+const sections = ['hero','word-scout','audio-quest','read-aloud','boss-battle'];
+const dots     = document.querySelectorAll('.map-dot');
+
+dots.forEach((dot, i) => {
+  dot.addEventListener('click', () =>
+    document.getElementById(sections[i]).scrollIntoView({ behavior: 'smooth' })
+  );
+  ScrollTrigger.create({
+    trigger : '#' + sections[i],
+    start   : 'top center',
+    end     : 'bottom center',
+    onToggle: self => {
+      if (self.isActive) {
+        dots.forEach(d => d.classList.remove('active'));
+        dot.classList.add('active');
+      }
+    }
+  });
+});
+</script>
+</body>
+</html>
