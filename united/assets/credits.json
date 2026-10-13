@@ -1,0 +1,29 @@
+[
+  {
+    "id": "son",
+    "file": "BFA_2023_-2_Heung-Min_Son_(cropped).jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:BFA_2023_-2_Heung-Min_Son_(cropped).jpg",
+    "artist": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Ujishadow&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Ujishadow (page does not exist)\">Ujishadow</a>",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>"
+  },
+  {
+    "id": "haaland",
+    "file": "Erling_Haaland_Morocco_v_Norway_7_June_2026-51.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Erling_Haaland_Morocco_v_Norway_7_June_2026-51.jpg",
+    "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Berlination\" title=\"User:Berlination\">Bryan Berlin</a>",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>"
+  },
+  {
+    "id": "mbappe",
+    "file": "Kylian_Mbappe_France_v_Senegal_16_June_2026-391_(cropped).jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Kylian_Mbappe_France_v_Senegal_16_June_2026-391_(cropped).jpg",
+    "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Berlination\" title=\"User:Berlination\">Bryan Berlin</a>",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>"
+  }
+]
