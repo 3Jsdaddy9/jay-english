@@ -5,22 +5,29 @@ import { shell, button, toast, openDialog, playerCard, escape as e } from './ui.
 import { home, market, squad, slotDialog } from './views.mjs';
 import { questionView, resultView } from './learning.mjs';
 import { parentView, feedbackExport } from './parent.mjs';
-let state,data,bank,busy=false,restoreCandidate=null;
+import { historyHome, lessonView } from './history-views.mjs';
+import { vocabularyView } from './vocabulary-view.mjs';
+import { completeLessonStep, resetWord } from './history-engine.mjs';
+import { startVocabulary, vocabularyHint, revealVocabulary, gradeVocabulary, nextVocabulary } from './vocabulary-engine.mjs';
+let state,data,bank,course,busy=false,restoreCandidate=null;
 const main=document.querySelector('#main'),dialog=document.querySelector('#dialog');
-const route=()=>['home','match','market','squad','parent'].includes(location.hash.slice(1))?location.hash.slice(1):'home';
+const route=()=>new RegExp('^#lesson/[1-5]$').test(location.hash)?'lesson':['home','archive','vocabulary','match','market','squad','parent'].includes(location.hash.slice(1))?location.hash.slice(1):'home';
 function render(){
  const page=route();shell(state,page);
  switch(page){
-  case 'home':main.innerHTML=home(state,data,bank);break;
+  case 'home':main.innerHTML=historyHome(state,course);break;
+  case 'archive':main.innerHTML=home(state,data,bank);break;
+  case 'lesson':main.innerHTML=lessonView(state,course,Number(location.hash.split('/')[1]));break;
+  case 'vocabulary':main.innerHTML=vocabularyView(state,course);break;
   case 'match':main.innerHTML=state.active?(state.active.done?resultView(state):questionView(state,bank)):`<section class="panel stack"><p class="eyebrow">READY TO PLAY</p><h1>오늘의 경기를 시작해 볼까?</h1><p>문장을 읽고, 뜻을 찾고, 선수 영입 포인트를 모아 봐.</p>${button(state.tutorial?'경기 시작':'아카데미 입단',state.tutorial?'start':'welcome')}</section>`;break;
   case 'market':main.innerHTML=market(state);break;
   case 'squad':main.innerHTML=squad(state);break;
-  case 'parent':main.innerHTML=parentView(state,bank);break;
+  case 'parent':main.innerHTML=parentView(state,bank,course);break;
  }
- document.title=`${{home:'홈',match:'오늘의 경기',market:'선수 영입',squad:'나의 팀',parent:'학습 기록'}[page]} · JAY UNITED`;
+ document.title=`${{home:'홈',lesson:'역사탐험 수업',vocabulary:'단어 훈련',archive:'이전 리그',match:'오늘의 경기',market:'선수 영입',squad:'나의 팀',parent:'학습 기록'}[page]} · JAY UNITED`;
 }
 function navigate(page){if(route()===page)render();else location.hash=page;}
-function introduction(){openDialog(`<h2 id="dialog-title">Jay, 아카데미에 온 걸 환영해!</h2><div class="stack"><p><strong>1. 문장을 읽고 문제를 풀어 봐.</strong><br>단어와 문장의 중심을 차근차근 찾아보는 거야.</p><p><strong>2. 어려우면 코치의 힌트를 눌러.</strong><br>힌트를 써도 포인트는 똑같아.</p><p><strong>3. 포인트로 원하는 선수를 영입해.</strong><br>첫 입단 선물은 80P! 선수 영입 화면에서 바로 쓸 수 있어.</p></div><div class="dialog-actions">${button('나중에','close','','secondary')}${button('입단하고 80P 받기','claim')}</div>`);}
+function introduction(){openDialog(`<h2 id="dialog-title">Jay, 아카데미에 온 걸 환영해!</h2><div class="stack"><p><strong>1. 종이 읽기 → 영상 → 종이 문제</strong><br>오늘 만든 역사 수업으로 하루 20~30분만 함께해.</p><p><strong>2. 단어는 먼저 떠올린 뒤 답을 확인해.</strong><br>기억 안 나도 솔직하게 표시해. 포인트는 같아.</p><p><strong>3. 포인트로 원하는 선수를 영입해.</strong><br>첫 입단 선물은 80P! 선수 영입 화면에서 바로 쓸 수 있어.</p></div><div class="dialog-actions">${button('나중에','close','','secondary')}${button('입단하고 80P 받기','claim')}</div>`);}
 async function change(fn){state=await mutate(fn);render();}
 function currentQuestion(id){return bank.find(q=>q.id===id);}
 async function handleAction(el){
@@ -29,6 +36,13 @@ async function handleAction(el){
  busy=true;
  try{
   switch(action){
+   case 'lesson-step':await change(s=>completeLessonStep(s,Number(el.dataset.lesson),el.dataset.step));toast(el.dataset.step==='checked'?'부모 확인을 저장했어요.':'학습 단계를 저장했어.');break;
+   case 'word-reset':await change(s=>resetWord(s,el.dataset.word));toast('내일 다시 확인하도록 저장했어요.');break;
+   case 'vocab-start':await change(s=>startVocabulary(s));break;
+   case 'vocab-hint':await change(s=>vocabularyHint(s,el.dataset.turn));break;
+   case 'vocab-reveal':await change(s=>revealVocabulary(s,el.dataset.turn));break;
+   case 'vocab-grade':await change(s=>gradeVocabulary(s,el.dataset.turn,el.dataset.grade));break;
+   case 'vocab-next':await change(s=>nextVocabulary(s,el.dataset.turn));window.scrollTo(0,0);main.focus();break;
    case 'welcome':introduction();break;
    case 'claim':await change(welcome);dialog.close();toast('입단 축하해! 80P를 받았어.');navigate('home');break;
    case 'practice-menu':{const c=data.chapters.find(c=>c.id===el.dataset.chapter);openDialog(`<h2 id="dialog-title">${e(c.title)} · 자유 연습</h2><div class="stack">${c.matches.map((m,i)=>button(`${i+1}. ${e(m.title??'연습 경기')} · ${m.questions.length}문제`,'practice',`data-chapter="${m.id}"`,'secondary')).join('')}</div><p class="small muted">자유 연습은 포인트를 추가하지 않아요. 진행 중인 경기가 있으면 먼저 이어서 풀어요.</p><div class="dialog-actions">${button('닫기','close','','quiet')}</div>`);break;}
@@ -70,11 +84,12 @@ document.addEventListener('submit',async event=>{
 });
 document.addEventListener('change',async event=>{
  if(event.target.id!=='import-file')return;const file=event.target.files[0];if(!file)return;
- try{if(file.size>2000000)throw Error('2MB 이하의 기록 파일을 골라 주세요.');restoreCandidate=validateBackup(JSON.parse(await file.text()),bank);openDialog(`<h2 id="dialog-title">이 기록으로 바꿀까요?</h2><p>학습 ${restoreCandidate.completed.length}문제 · ${restoreCandidate.balance}P · 영입 ${restoreCandidate.owned.length}명</p><p>현재 기록은 먼저 파일로 백업한 뒤 선택한 기록으로 교체합니다.</p><div class="dialog-actions">${button('취소','close','','secondary')}${button('백업하고 복원','confirm-import')}</div>`);}catch(error){toast(error instanceof SyntaxError?'JSON 기록 파일을 읽지 못했어요.':error.message);}
+ try{if(file.size>2000000)throw Error('2MB 이하의 기록 파일을 골라 주세요.');restoreCandidate=validateBackup(JSON.parse(await file.text()),bank);openDialog(`<h2 id="dialog-title">이 기록으로 바꿀까요?</h2><p>학습 ${restoreCandidate.completed.length}문제 · ${restoreCandidate.balance}P · 영입 ${restoreCandidate.owned.length}명</p><p>역사탐험 ${Object.values(restoreCandidate.history.lessons).filter(l=>l.paper).length}차시 · 단어 ${Object.keys(restoreCandidate.history.words).length}개 포함</p><p>현재 기록 전체를 선택한 백업으로 교체합니다. 역사 기록이 없는 옛 백업을 고르면 역사 진행도 초기화됩니다. 복원 전 현재 기록 파일을 먼저 내려받습니다.</p><div class="dialog-actions">${button('취소','close','','secondary')}${button('백업하고 복원','confirm-import')}</div>`);}catch(error){toast(error instanceof SyntaxError?'JSON 기록 파일을 읽지 못했어요.':error.message);}
 });
 try{
  const response=await fetch('questions.json');if(!response.ok)throw Error('문제를 불러오지 못했어요. 실행 바로가기로 다시 열어 주세요.');data=await response.json();
  bank=data.chapters.flatMap(c=>c.matches.flatMap(m=>m.questions.map(q=>({...q,chapter:c.id,match:m.id}))));
+ const courseResponse=await fetch('history-data.json');if(!courseResponse.ok)throw Error('역사 수업을 불러오지 못했어요. 인터넷 연결 후 새로고침해 주세요.');course=await courseResponse.json();
  await openStore();state=await readState();render();onRemoteChange(async()=>{state=await readState();render();});
  if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>toast('오프라인 준비를 하지 못했어요. 연결된 상태에서는 계속할 수 있어요.'));
 }catch(error){main.innerHTML=`<section class="panel stack"><h1>경기장을 열지 못했어요.</h1><p>${e(error.message)}</p><a class="btn" href="./">다시 시도</a></section>`;}

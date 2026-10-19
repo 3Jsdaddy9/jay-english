@@ -1,0 +1,486 @@
+{
+  "lessons": [
+    {
+      "id": 1,
+      "title": "칭기즈칸은 어떻게 여러 집단을 하나로 모았을까?",
+      "enTitle": "Many Groups, One Leader",
+      "era": "1206 · 몽골",
+      "before": "Genghis Khan은 칭기즈칸, Mongol은 몽골의/몽골인을 뜻해요. 이름과 연도 암기는 생략해요.",
+      "reading": "Long ago, Mongol people lived in many groups. The groups did not always work together. A man named Temujin united many of them. In 1206, he became their leader and received the title Genghis Khan. His empire grew through wars. An empire rules different lands and peoples. After his death, other Mongol leaders made it larger. These wars also hurt many people. We can learn about his power and remember the people who suffered.",
+      "easy": "Mongol people lived in many groups. Genghis Khan united many of them. In 1206, he became their leader. His empire grew through wars. Later leaders made it larger. Many people were hurt. A large empire was not a happy place for everyone.",
+      "glossary": [
+        [
+          "united",
+          "unite의 과거형"
+        ],
+        [
+          "title",
+          "칭호·직함"
+        ],
+        [
+          "received",
+          "받았다"
+        ],
+        [
+          "rules",
+          "다스린다"
+        ],
+        [
+          "lands and peoples",
+          "여러 땅과 민족"
+        ],
+        [
+          "death",
+          "죽음"
+        ],
+        [
+          "suffered",
+          "고통을 겪었다"
+        ],
+        [
+          "were hurt",
+          "다쳤거나 피해를 입었다"
+        ]
+      ],
+      "sentence": "After his death, other Mongol leaders made it larger.",
+      "chunks": [
+        [
+          "After his death,",
+          "그가 죽은 뒤"
+        ],
+        [
+          "other Mongol leaders",
+          "다른 몽골 지도자들이"
+        ],
+        [
+          "made it larger.",
+          "그것을 더 크게 만들었다"
+        ]
+      ],
+      "pattern": "make + 대상 + 상태",
+      "model": "A good idea can make our game better.",
+      "explanation": "A good idea / can make / our game / better. 좋은 생각이 / 만들 수 있다 / 우리 경기를 / 더 좋게. 무엇을 어떤 상태로 만드는지 찾아요. 본문의 made it larger도 같은 뼈대예요. made는 make의 과거형이에요.",
+      "words": [
+        "unite",
+        "empire"
+      ],
+      "pdf": "https://drive.google.com/file/d/1U6oOGUwOiALpp9328a2DK75LLo8SZczQ/view?usp=drivesdk",
+      "video": "https://drive.google.com/file/d/1tNxe4N_7cQRbRBbnQb1YK7vloKHQClDM/view?usp=drivesdk",
+      "duration": "8:13"
+    },
+    {
+      "id": 2,
+      "title": "스마트폰이 없던 시대, 말은 어떤 일을 했을까?",
+      "enTitle": "More Than a Ride",
+      "era": "칭기즈칸과 몽골 제국 시대",
+      "before": "오늘은 말을 타고 이동하던 몽골 사람들의 생활을 읽어요. 특정 기수의 실제 일기를 옮긴 글은 아니에요.",
+      "reading": "Horses were important to the Mongols. They helped people travel across wide lands. Riders carried food and water in bags. Horses helped transport these things as well as people. Riders could also carry a message from one place to another. There were no phones. News had to travel with people. A rider could change horses so a tired horse could rest. Horses helped the Mongols move, but they also needed care.",
+      "easy": "Mongol riders used horses to travel. Horses helped transport people, food, and water. A rider could carry a message, too. There were no phones. News traveled with people. Riders could change horses. A tired horse could rest. Horses were important helpers.",
+      "glossary": [
+        [
+          "rider",
+          "말을 타는 사람"
+        ],
+        [
+          "as well as",
+          "~뿐 아니라"
+        ],
+        [
+          "news",
+          "소식"
+        ],
+        [
+          "so",
+          "그래서/~할 수 있도록"
+        ],
+        [
+          "care",
+          "돌봄"
+        ],
+        [
+          "traveled",
+          "이동했다"
+        ],
+        [
+          "rest",
+          "쉬다"
+        ]
+      ],
+      "sentence": "A rider could change horses so a tired horse could rest.",
+      "chunks": [
+        [
+          "A rider",
+          "기수는"
+        ],
+        [
+          "could change horses",
+          "말을 바꿔 탈 수 있었다"
+        ],
+        [
+          "so",
+          "그래서/~할 수 있도록"
+        ],
+        [
+          "a tired horse could rest.",
+          "지친 말이 쉴 수 있었다"
+        ]
+      ],
+      "pattern": "so that + 주어 + can",
+      "model": "I speak slowly so that my friend can understand me.",
+      "explanation": "I speak slowly / so that / my friend can understand me. 나는 천천히 말한다 / ~할 수 있도록 / 내 친구가 나를 이해할 수 있다. 앞은 내가 하는 일, 뒤는 그 목적이에요. I와 my friend는 서로 다른 주어예요. 본문의 so도 이 문맥에서는 목적을 연결해요.",
+      "words": [
+        "transport",
+        "message"
+      ],
+      "pdf": "https://drive.google.com/file/d/1AEp5FEmEklRxBnUda96UE7b_Piaz1KzH/view?usp=drivesdk",
+      "video": "https://drive.google.com/file/d/1ddUDu8LWgkwtFJW1hEXt4HZe7YC5FDB3/view?usp=drivesdk",
+      "duration": "8:44"
+    },
+    {
+      "id": 3,
+      "title": "나라들이 편을 맺으면 전쟁은 저절로 일어날까?",
+      "enTitle": "Allies and Choices",
+      "era": "1914 · 제1차 세계대전 시작",
+      "before": "칭기즈칸의 시대에서 700년 넘게 지난 뒤예요. Franz Ferdinand는 오스트리아-헝가리의 황태자였어요. alliance는 나라 사이의 동맹이라는 도움말로만 읽어요.",
+      "reading": "World War I began in 1914. Before the war, some countries agreed to help each other. A country that helps another can be an ally. Leaders hoped that allies would help protect their countries. But fear and arguments also grew. In June, Franz Ferdinand was killed. This event started a serious crisis. Leaders then made choices that led to war. Alliances mattered, but they did not make every choice for people.",
+      "easy": "World War I began in 1914. Some countries had allies. An ally helps another country. Leaders wanted to protect their countries. But fear and arguments grew. Leaders made choices that led to war. Alliances were important. They were not the only reason for war.",
+      "glossary": [
+        [
+          "countries",
+          "나라들"
+        ],
+        [
+          "allies",
+          "ally의 복수형"
+        ],
+        [
+          "agreed",
+          "동의했다/약속했다"
+        ],
+        [
+          "fear and arguments",
+          "두려움과 다툼"
+        ],
+        [
+          "was killed",
+          "살해되었다"
+        ],
+        [
+          "crisis",
+          "위기"
+        ],
+        [
+          "led to",
+          "~로 이어졌다"
+        ],
+        [
+          "mattered",
+          "중요한 영향을 주었다"
+        ]
+      ],
+      "sentence": "Alliances mattered, but they did not make every choice for people.",
+      "chunks": [
+        [
+          "Alliances mattered,",
+          "동맹들은 중요했다"
+        ],
+        [
+          "but",
+          "그러나"
+        ],
+        [
+          "they did not make every choice",
+          "그것들이 모든 선택을 한 것은 아니었다"
+        ],
+        [
+          "for people.",
+          "사람들 대신에"
+        ]
+      ],
+      "pattern": "Although + 문장, 문장",
+      "model": "Although the bag is small, it can carry three books.",
+      "explanation": "Although the bag is small, / it can carry three books. 가방은 작지만 / 책 세 권을 담을 수 있다. 예상과 다른 사실을 붙이는 말이에요. The bag is small, but it can carry three books.와 뜻이 같아요. 이 연습에서는 Although로 시작하면 뒤에 but을 또 쓰지 않아요. it은 bag이에요.",
+      "words": [
+        "ally",
+        "protect"
+      ],
+      "pdf": "https://drive.google.com/file/d/1HeoWvSFh1d9QfwZwWkqxYe38tQjaBpeg/view?usp=drivesdk",
+      "video": "https://drive.google.com/file/d/11xyU3OVsCIVy6MIGz-62UBrAkYCrsfYf/view?usp=drivesdk",
+      "duration": "11:20"
+    },
+    {
+      "id": 4,
+      "title": "전투가 멈추면 곧바로 평화가 완성될까?",
+      "enTitle": "A Stop Is a Beginning",
+      "era": "1918년 11월 11일 · 서부 전선",
+      "before": "Western Front는 제1차 세계대전 때 서유럽의 주요 전투 지역인 서부 전선이에요. armistice는 휴전이라는 뜻을 보고 읽어도 돼요. 철자 암기는 하지 않아요.",
+      "reading": "On 11 November 1918, fighting on the Western Front stopped at eleven in the morning. Germany and the Allies had agreed to an armistice. An armistice is an agreement to stop fighting. Many people welcomed the news. Others remembered people who had died. The agreement did not end every conflict in the world. Leaders still had to work on peace. Stopping the fighting was important, but building peace was a longer job.",
+      "easy": "On 11 November 1918, fighting on the Western Front stopped. Germany and the Allies agreed to an armistice: an agreement to stop fighting. Many people were glad. But not every conflict ended. People still had to work on peace.",
+      "glossary": [
+        [
+          "Germany",
+          "독일"
+        ],
+        [
+          "the Allies",
+          "연합국"
+        ],
+        [
+          "agreement",
+          "서로 동의한 약속·합의"
+        ],
+        [
+          "welcomed",
+          "기쁘게 받아들였다"
+        ],
+        [
+          "remembered",
+          "기억했다/떠올렸다"
+        ],
+        [
+          "conflict",
+          "분쟁·충돌"
+        ],
+        [
+          "building peace",
+          "평화를 만들어 가는 일"
+        ]
+      ],
+      "sentence": "Stopping the fighting was important, but building peace was a longer job.",
+      "chunks": [
+        [
+          "Stopping the fighting",
+          "전투를 멈추는 것은"
+        ],
+        [
+          "was important,",
+          "중요했다"
+        ],
+        [
+          "but",
+          "그러나"
+        ],
+        [
+          "building peace",
+          "평화를 만드는 일은"
+        ],
+        [
+          "was a longer job.",
+          "더 오래 걸리는 일이었다"
+        ]
+      ],
+      "pattern": "-ing로 시작해 ‘~하는 일’을 주어로 쓰기",
+      "model": "Reading a book is fun.",
+      "explanation": "Reading a book / is fun. 책을 읽는 일은 / 재미있다. 누가 읽는지보다 읽는 활동 자체를 말해요. 본문에서도 Stopping the fighting과 building peace가 각각 하나의 일이에요. 오늘은 현재진행형의 ‘읽고 있다’로 해석하지 않아요.",
+      "words": [
+        "peace",
+        "armistice"
+      ],
+      "pdf": "https://drive.google.com/file/d/1ZjP2KEcYvXyqCLkDhS_XLh_ZICVxf0Ww/view?usp=drivesdk",
+      "video": "https://drive.google.com/file/d/1EAkRIl7TfzhfohCZzQCPJ3dNPWq7aR-F/view?usp=drivesdk",
+      "duration": "7:13"
+    },
+    {
+      "id": 5,
+      "title": "역사 탐정의 마지막 임무: 사실과 이야기를 나누자",
+      "enTitle": "Jay's History Table",
+      "era": "복습 · 새 단어 없음",
+      "before": "오늘 영어 글은 역사 시간에 책을 읽는 아이들의 창작 이야기예요. 칭기즈칸의 시대와 제1차 세계대전은 같은 시대가 아니에요.",
+      "reading": "Jay puts two books on a table. One is about Genghis Khan. The other is about World War I. He finds the word empire and reads it again. Then he writes a message to Mina: These stories are from different times. Mina brings a box to protect the books. They unite their two groups for a history show. Before the show, they choose one question: How can people work for peace?",
+      "easy": "Jay has two history books. They are about different times. He sends Mina a message. Mina brings a box to protect the books. Their groups unite for one show. Jay wants to ask a question about peace.",
+      "glossary": [
+        [
+          "the other",
+          "다른 하나"
+        ],
+        [
+          "different times",
+          "서로 다른 시대"
+        ],
+        [
+          "history show",
+          "역사 발표회"
+        ]
+      ],
+      "sentence": "Before the show, they choose one question.",
+      "chunks": [
+        [
+          "Before the show,",
+          "발표회 전에"
+        ],
+        [
+          "they",
+          "그들은"
+        ],
+        [
+          "choose one question.",
+          "질문 하나를 고른다"
+        ]
+      ],
+      "pattern": "배운 연결 표현 골라 쓰기",
+      "model": "Although the map is old, we can read it.",
+      "explanation": "지도가 오래됐다는 사실과 그래도 읽을 수 있다는 사실을 Although로 연결해요. 목적을 말하려면 so that, 무엇을 어떤 상태로 만들려면 make, 활동 자체를 말하려면 -ing를 골라요. 오늘 새 문법은 없어요.",
+      "words": [],
+      "pdf": "https://drive.google.com/file/d/1yQGFGWGPDv0zsbhPTHKJ08L-rbWDxV7K/view?usp=drivesdk",
+      "video": "https://drive.google.com/file/d/1YMKlD4o1ztyJdtI-Tv7TMFRtNWLTmUoz/view?usp=drivesdk",
+      "duration": "8:29",
+      "reviewWords": [
+        "message",
+        "protect"
+      ]
+    }
+  ],
+  "words": {
+    "unite": {
+      "word": "unite",
+      "pos": "동사",
+      "meaning": "하나로 모으다·힘을 합치다",
+      "definition": "to join together as one",
+      "root": "라틴어 unus(하나) → unire(하나로 만들다) → 프랑스어를 거쳐 영어 unite.",
+      "image": "여럿 → 하나",
+      "story": "Jay 앞에 작은 퍼즐 조각들이 흩어져 있어. 조각 하나만 보면 그림을 알 수 없지. Jay가 조각들을 이어 붙이자 한 장의 그림이 나타나. ‘하나’를 뜻한 unus에서 ‘하나로 만들다’라는 unire로 이어지는 뜻을 이 장면으로 기억해 보자. unite는 떨어져 있던 것들을 하나로 모으거나 함께 힘을 합치는 말이야.",
+      "example": "The small groups unite for one project.",
+      "ask": "여러 조각이 따로 있을 때와 하나로 모였을 때 중 unite에 가까운 장면은?",
+      "answer": "하나로 모였을 때.",
+      "family": "unite → united: 합치다 → 합쳤다. 오늘 글에서는 과거의 일을 말해요.",
+      "caution": "이 퍼즐 이야기는 기억용 창작이에요. 실제 몽골의 통합이 모두의 자발적 협동만으로 이루어졌다는 뜻은 아니에요.",
+      "source": "https://www.merriam-webster.com/dictionary/unite",
+      "daily": "Our class unites to clean the playground.",
+      "daily_ko": "우리 반이 운동장을 청소하려고 힘을 모아요.",
+      "recognitionOnly": false
+    },
+    "empire": {
+      "word": "empire",
+      "pos": "명사",
+      "meaning": "여러 땅과 민족을 다스리는 제국",
+      "definition": "many lands and peoples under one ruling power",
+      "root": "라틴어 imperium(명령권·통치권)에서 프랑스어를 거쳐 영어 empire로 이어졌어요.",
+      "image": "여러 땅 위로 미치는 하나의 통치권",
+      "story": "이번에는 상상 속 지도를 펼쳐 보자. 지도에는 말과 생활 방식이 다른 사람들이 사는 땅이 여럿 있어. 한 통치 권력이 그 여러 땅에 명령을 내리고 다스려. empire의 뿌리 imperium에는 이런 ‘통치하는 힘’의 뜻이 있었어. 그래서 단순히 땅이 넓기만 하다고 모두 empire인 것은 아니야. 누구의 통치를 받는지도 함께 보아야 해.",
+      "example": "The empire ruled different lands and peoples.",
+      "ask": "empire를 이해할 때 땅의 크기만 볼까, 누가 다스리는지도 볼까?",
+      "answer": "누가 여러 땅과 민족을 다스리는지도 봐요.",
+      "family": "오늘은 empire 하나만 익혀도 충분해요.",
+      "caution": "통치받는 사람들이 모두 행복하거나 같은 마음이었다고 상상하지 않아요. em+pire처럼 임의로 쪼개지 않아요.",
+      "source": "https://www.merriam-webster.com/dictionary/empire",
+      "daily": "I read a book about the Roman Empire.",
+      "daily_ko": "나는 로마 제국에 관한 책을 읽어요. empire는 주로 역사·뉴스에서 만나요.",
+      "recognitionOnly": false
+    },
+    "transport": {
+      "word": "transport",
+      "pos": "동사",
+      "meaning": "한 곳에서 다른 곳으로 운송하다",
+      "definition": "to move people or things from one place to another",
+      "root": "라틴어 trans-(건너·가로질러) + portare(나르다) → transportare → 영어 transport.",
+      "image": "이쪽의 짐을 저쪽으로 나르기",
+      "story": "강 이쪽에 물통이 있고 저쪽에는 물이 필요한 사람들이 있어. Jay가 물통을 수레에 싣고 다리를 건너가. trans-는 ‘건너’, portare는 ‘나르다’라는 뜻이었어. 두 뜻을 이어 보면 물건을 건너편으로 옮기는 장면이 떠오르지? 지금의 transport는 꼭 강을 건너지 않아도, 사람이나 물건을 한 장소에서 다른 장소로 운송할 때 써.",
+      "example": "The boat transports boxes to the island.",
+      "ask": "상자가 같은 자리에 놓여 있는 장면과 다른 곳으로 옮겨지는 장면 중 transport는?",
+      "answer": "다른 곳으로 옮겨지는 장면.",
+      "family": "carry는 나르다, transport는 장소를 옮겨 운송한다는 점에 초점을 둬요.",
+      "caution": "이 단어 속 port의 뿌리는 ‘항구’가 아니라 portare(나르다)예요. 오늘은 동사 뜻만 익혀요.",
+      "source": "https://www.merriam-webster.com/dictionary/transport",
+      "daily": "The bus transports students to school.",
+      "daily_ko": "버스가 학생들을 학교로 운송해요. transport는 carry보다 조금 격식 있는 말이에요.",
+      "recognitionOnly": false
+    },
+    "message": {
+      "word": "message",
+      "pos": "명사",
+      "meaning": "다른 사람에게 전하는 말·내용",
+      "definition": "words or information sent to someone",
+      "root": "라틴어 mittere(보내다), missus(보내진)에서 나온 중세 라틴어 missaticum이 프랑스어를 거쳐 message로 이어졌어요.",
+      "image": "내 생각이 다른 사람에게 도착하기",
+      "story": "Jay는 Mina에게 내일 만날 곳을 알려 주고 싶어. 종이에 ‘도서관 앞에서 만나자’라고 적어 보내. 종이를 보내는 진짜 이유는 종이 자체가 아니라 그 안의 말을 전하려는 것이지. message의 먼 뿌리에는 ‘보내다’라는 뜻이 있어. 오늘은 말로 전해도, 종이에 써도, 휴대전화로 보내도 전달되는 내용을 message라고 할 수 있어.",
+      "example": "The message says: Meet me at the gate.",
+      "ask": "message는 전달하는 사람일까, 전하는 내용일까?",
+      "answer": "전하는 내용. 전달하는 사람은 messenger라고 해요.",
+      "family": "message: 전하는 내용 / messenger: 전하는 사람. 뜻을 비교만 해요.",
+      "caution": "mess(엉망)와 age(나이)를 붙여 만든 단어가 아니에요. 옛 기수 이야기에서 휴대전화를 쓰게 하지 않아요.",
+      "source": "https://www.merriam-webster.com/dictionary/message",
+      "daily": "I send my friend a message after school.",
+      "daily_ko": "방과 후에 친구에게 메시지를 보내요.",
+      "recognitionOnly": false
+    },
+    "ally": {
+      "word": "ally",
+      "pos": "명사",
+      "meaning": "같은 편에서 돕는 사람·동맹국",
+      "definition": "a person or country that helps another",
+      "root": "라틴어 alligare(붙들어 매다·연결하다: ad- + ligare)가 프랑스어를 거쳐 ally로 이어졌어요.",
+      "image": "도움을 주고받도록 이어진 두 편",
+      "story": "서로 떨어진 두 작은 배를 생각해 보자. 혼자 움직이면 서로 어디로 가는지 알기 어려워. 두 배가 함께 가기로 약속하고 연결되어 있는 모습을 떠올려 봐. ally의 뿌리에는 ‘묶어 연결하다’라는 뜻이 있었어. 지금은 실제 줄에 묶인 사람이 아니라, 같은 목표를 위해 도와주는 사람이나 나라를 말해. 함께한다고 모든 판단이 저절로 정해지는 것은 아니야.",
+      "example": "Our ally helps us finish the work.",
+      "ask": "같은 목표를 위해 도움을 주는 편은 ally일까?",
+      "answer": "네. 다만 모든 친구 관계를 곧바로 국가 간 동맹과 같다고 보지는 않아요.",
+      "family": "ally 한 편 / allies 여러 편. alliance는 동맹 관계라는 도움말로 읽어요.",
+      "caution": "배와 줄은 기억용 비유예요. 동맹이 기계처럼 나라들을 자동으로 전쟁에 끌어당긴다는 뜻은 아니에요.",
+      "source": "https://www.merriam-webster.com/dictionary/ally",
+      "daily": "Mina is my ally in this game.",
+      "daily_ko": "이 게임에서 Mina는 나를 돕는 같은 편이에요.",
+      "recognitionOnly": false
+    },
+    "protect": {
+      "word": "protect",
+      "pos": "동사",
+      "meaning": "해를 입지 않도록 보호하다",
+      "definition": "to keep someone or something safe from harm",
+      "root": "라틴어 pro-(앞에) + tegere(덮다) → protegere(앞을 덮어 지키다) → protect.",
+      "image": "위험 앞에 덮개를 세워 지키기",
+      "story": "종이로 만든 작은 집 앞에 빗방울이 떨어지기 시작해. Jay가 넓은 판을 세워 빗방울을 막아 줘. pro-의 ‘앞에’와 tegere의 ‘덮다’를 이어 보니, 위험 앞을 가려 주는 모습이 떠오르지? 이것이 protect의 뜻을 기억하는 장면이야. 실제로 보호하는 방법은 덮개만이 아니야. 헬멧이나 안전 규칙도 사람을 protect할 수 있어.",
+      "example": "A roof protects us from rain.",
+      "ask": "지켜 주는 것은 판일까, 빗방울일까?",
+      "answer": "비를 막는 판. 누구/무엇을 지키는지도 함께 말해요.",
+      "family": "protect → protects: 주어에 맞춰 모양이 달라져도 보호한다는 뜻은 같아요.",
+      "caution": "앞에(pro-)라는 뜻만 보고 모양이 비슷한 모든 단어를 같은 어원으로 나누지 않아요.",
+      "source": "https://www.merriam-webster.com/dictionary/protect",
+      "daily": "A helmet protects my head.",
+      "daily_ko": "헬멧이 내 머리를 보호해요.",
+      "recognitionOnly": false
+    },
+    "peace": {
+      "word": "peace",
+      "pos": "명사",
+      "meaning": "전쟁·다툼이 없는 평화",
+      "definition": "a time or state without war or fighting",
+      "root": "라틴어 pax(평화), 그 어간 pac-가 프랑스어를 거쳐 영어 peace로 이어졌어요.",
+      "image": "싸움이 멈춘 자리에 다시 이어지는 일상",
+      "story": "상상 속 마을에서 오래 이어진 다툼이 멎었어. 사람들은 다시 서로 말을 듣고, 망가진 다리를 고치고, 아이들이 다닐 길을 살펴. 단지 조용해지는 것에서 한 걸음 더 나아가 함께 살아갈 방법을 만드는 거야. peace의 오래된 뿌리 pax도 평화를 뜻했어. 오늘의 장면은 평화가 어떤 모습일지 생각하는 이야기이지, 단어가 처음 생긴 순간을 재현한 것은 아니야.",
+      "example": "The families hope for peace.",
+      "ask": "peace는 계속 싸우는 상태일까, 싸움 없이 살아가는 상태일까?",
+      "answer": "싸움 없이 살아가는 평화.",
+      "family": "peaceful: 평화로운. 뜻을 알아보기만 해요.",
+      "caution": "소리가 비슷한 piece(조각)와 다른 단어예요. 그림을 보며 ‘평화’를 말한 뒤 철자도 한 번 확인해요.",
+      "source": "https://www.merriam-webster.com/dictionary/peace",
+      "daily": "We want peace in our classroom.",
+      "daily_ko": "우리는 교실에서 다툼 없이 지내기를 바라요.",
+      "recognitionOnly": false
+    },
+    "armistice": {
+      "word": "armistice",
+      "pos": "명사 · 읽기 도움용",
+      "meaning": "전투를 멈추기로 한 합의·휴전",
+      "definition": "an agreement to stop fighting",
+      "root": "라틴어 arma(무기)와 ‘멈추게 하다·서게 하다’에 연결되는 요소가 합쳐진 라틴어계 armistitium에서 왔어요.",
+      "image": "무기를 쓰는 전투를 멈추기로 약속하기",
+      "story": "서로 싸우던 두 편의 대표가 문서를 마주 놓아. 두 편은 ‘전투를 멈추자’고 합의해. arma의 ‘무기’와 멈추게 한다는 어원 뜻을 생각하면, 무기의 움직임이 멎는 장면으로 기억할 수 있어. 하지만 잠깐 총소리가 안 들리는 것만으로는 이 단어를 다 설명하지 못해. 중요한 것은 서로 전투 중단에 합의했다는 점이야. 평화를 만드는 일은 그 뒤에도 남을 수 있어.",
+      "example": "The armistice stopped the fighting there.",
+      "ask": "armistice는 단순히 조용한 순간일까, 전투를 멈추기로 한 합의일까?",
+      "answer": "전투를 멈추기로 한 합의.",
+      "family": "arms에는 무기라는 뜻도 있어요. 여기서는 팔을 뜻하는 arm이 아니에요.",
+      "caution": "arm+is+ice로 나누지 않아요. 1918년의 합의가 세계의 모든 분쟁을 끝냈다고 말하지 않아요. 뜻을 보며 읽어도 충분해요.",
+      "source": "https://www.merriam-webster.com/dictionary/armistice",
+      "daily": "I read about an armistice in a history book.",
+      "daily_ko": "역사책에서 휴전에 관해 읽어요. 일상에서 자주 말하는 단어는 아니에요.",
+      "recognitionOnly": true
+    }
+  },
+  "links": {
+    "guide": "https://drive.google.com/file/d/1WYr0xVcfZkURpcVbxImiJPXjNoamF8YX/view?usp=drivesdk",
+    "parent": "https://drive.google.com/file/d/1Ac9kGla5-TVagd4Dl8SVg-rRpK3qOZII/view?usp=drivesdk",
+    "all": "https://drive.google.com/file/d/1SGAwcjtYp6rbT2Vbjuh1R0M-CXXKXL_-/view?usp=drivesdk",
+    "easy": "https://drive.google.com/file/d/1Iqk47SlY6HHo-OqPW4ACx1-S6ccTeZId/view?usp=drivesdk",
+    "folder": "https://drive.google.com/drive/folders/1cqCddn2h2iyjoJa_5gqLjLwZAk43RLgW"
+  }
+}

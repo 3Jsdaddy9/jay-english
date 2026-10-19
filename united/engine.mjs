@@ -1,6 +1,6 @@
 import { ACADEMY, PLAYERS, POSITIONS, playerById } from './catalog.mjs';
 export const dateKey = (time=Date.now()) => new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(time);
-export const freshState = () => ({version:1,revision:0,tutorial:false,balance:0,owned:[],lineup:ACADEMY.map(p=>p.id),completed:[],rewards:{},days:{},reviews:{},sessions:[],feedback:[],observations:[],badges:[],active:null});
+export const freshState = () => ({version:1,revision:0,tutorial:false,balance:0,owned:[],lineup:ACADEMY.map(p=>p.id),completed:[],rewards:{},days:{},reviews:{},sessions:[],feedback:[],observations:[],badges:[],active:null,history:{version:1,lessons:{},words:{},practice:null}});
 export const questionsOf = data => data.chapters.flatMap(c=>c.matches.flatMap(m=>m.questions));
 export const dueQuestions = (state,bank,day) => {
  const seen=new Set();
@@ -8,7 +8,7 @@ export const dueQuestions = (state,bank,day) => {
 };
 const nextDay=(day,days)=>new Date(Date.parse(`${day}T12:00:00+09:00`)+days*86400000).toISOString().slice(0,10);
 const daily=(s,day)=>s.days[day]??={basic:null,review:null,earned:0};
-function award(s,key,amount,day){
+export function award(s,key,amount,day){
  if(Object.hasOwn(s.rewards,key))return 0;
  const d=daily(s,day), value=Math.min(amount,140-d.earned);
  s.rewards[key]=value;s.balance+=value;d.earned+=value;return value;

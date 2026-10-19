@@ -1,3 +1,4 @@
+import { validateHistory } from './history-backup.mjs';
 import { freshState } from './engine.mjs';
 import { ALL_PLAYERS, POSITIONS, SKILLS } from './catalog.mjs';
 let connection;
@@ -64,6 +65,7 @@ export function validateBackup(value,bank){
  if(new Set(s.completed).size!==s.completed.length)fail();
  if(!Array.isArray(s.feedback)||!s.feedback.every(f=>obj(f)&&typeof f.sessionId==='string'&&['great','okay','boring'].includes(f.rating)&&['easy','right','hard'].includes(f.difficulty)&&typeof f.note==='string'&&f.note.length<=500&&typeof f.at==='string'))fail();
  if(!Array.isArray(s.observations)||!s.observations.every(o=>obj(o)&&typeof o.note==='string'&&o.note.length<=1000&&typeof o.at==='string'))fail();
+ s.history=validateHistory(s.history);
  return s;
 }
 export function downloadFile(name,data){
