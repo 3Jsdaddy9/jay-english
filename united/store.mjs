@@ -1,7 +1,8 @@
 import { validateHistory } from './history-backup.mjs';
 import { freshState } from './engine.mjs';
 import { ALL_PLAYERS, POSITIONS, SKILLS } from './catalog.mjs';
-let connection;
+let connection,readOnly=false;
+export const setReadOnly=value=>{readOnly=value;};
 const channel=typeof window!=='undefined'&&typeof BroadcastChannel==='function'?new BroadcastChannel('jay-united-updates'):null;
 export const onRemoteChange=fn=>{if(channel)channel.onmessage=fn;};
 export function openStore(){
@@ -20,6 +21,7 @@ export function readState(){
  });
 }
 export function mutate(change){
+ if(readOnly)return Promise.reject(Error('연동 화면에서 이어서 학습해 주세요.'));
  return new Promise((resolve,reject)=>{
   const tx=connection.transaction('state','readwrite'),table=tx.objectStore('state');let result,problem;
   table.get('jay').onsuccess=event=>{

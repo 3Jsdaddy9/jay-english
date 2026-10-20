@@ -1,3 +1,4 @@
+import { setupBridge } from './cloud-bridge.mjs';
 import { PLAYERS, playerById } from './catalog.mjs';
 import { questionsOf, dateKey, welcome, startSession, selectAnswer, showHint, submitAnswer, nextQuestion, buyPlayer, setLineup, saveFeedback } from './engine.mjs';
 import { openStore, readState, mutate, onRemoteChange, validateBackup, downloadFile } from './store.mjs';
@@ -91,5 +92,6 @@ try{
  bank=data.chapters.flatMap(c=>c.matches.flatMap(m=>m.questions.map(q=>({...q,chapter:c.id,match:m.id}))));
  const courseResponse=await fetch('history-data.json');if(!courseResponse.ok)throw Error('역사 수업을 불러오지 못했어요. 인터넷 연결 후 새로고침해 주세요.');course=await courseResponse.json();
  await openStore();state=await readState();render();onRemoteChange(async()=>{state=await readState();render();});
+ setupBridge();
  if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>toast('오프라인 준비를 하지 못했어요. 연결된 상태에서는 계속할 수 있어요.'));
 }catch(error){main.innerHTML=`<section class="panel stack"><h1>경기장을 열지 못했어요.</h1><p>${e(error.message)}</p><a class="btn" href="./">다시 시도</a></section>`;}

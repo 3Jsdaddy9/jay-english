@@ -35,3 +35,8 @@ Module lives under united/, existing XP/storage unchanged. IndexedDB transaction
 
 ## 9. History course (2026-10-19)
 Retain existing football identity, tokens and player economy. Home promotes five history lessons; legacy matches remain under optional archive, no default Goodmorning content. Course pages use opaque reading panels, ordered manual paper/video/paper steps and semantic PDF/video links. Vocabulary is a separate focused recall panel with hidden answer, optional etymology hint, answer reveal, three honest self-ratings and next date. One main action at each phase; no timer/countdown. Recognition-only armistice never requires spelling. Parent sees dates/status, self-report labels and a ten-minute checklist. Progress and word records persist in optional history schema1 alongside original IndexedDB v1, with validation for both old and new backups. Private Drive media require existing account access; never change sharing permission. Offline text/reviews work; video/PDF links require internet. Do not describe unverified AR3.5 as a tested reading level.
+
+## 10. Cloud migration
+Use existing status/button primitives and palette. Sync strip max1120px, 16px padding, wrapping with 48px touch links. Explicit migration opens private cloud site, downloads full local backup, authenticates same parent account, and uses bound window/origin/nonce messages. Cloud record is never implicitly replaced. Existing origin becomes read-only after successful transfer. New account service supports automatic online writes and offline reading.
+
+The migration strip is present in initial HTML to reserve its height. Its existing text/buttons retain the shared spacing, typography and color tokens.
