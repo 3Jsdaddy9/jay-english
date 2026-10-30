@@ -1,2 +1,20 @@
-<!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#0c2133"><meta name="description" content="Jay의 영어 독해 축구 아카데미. 문장을 배우고 선수를 영입해 나만의 팀을 만들어요."><title>JAY UNITED · Reading Academy</title><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="manifest" href="manifest.json"><link rel="modulepreload" href="app.mjs"><link rel="modulepreload" href="catalog.mjs"><link rel="modulepreload" href="engine.mjs"><link rel="modulepreload" href="store.mjs"><link rel="modulepreload" href="ui.mjs"><link rel="modulepreload" href="views.mjs"><link rel="modulepreload" href="learning.mjs"><link rel="modulepreload" href="parent.mjs"><link rel="preload" as="image" href="assets/stadium.webp" fetchpriority="high"><link rel="preload" as="fetch" href="questions.json" crossorigin><link rel="preload" as="fetch" href="history-data.json" crossorigin><link rel="modulepreload" href="history-views.mjs"><link rel="modulepreload" href="vocabulary-view.mjs"><link rel="stylesheet" href="styles.css"><script type="module" src="app.mjs"></script></head><body><a class="skip-link" href="#main">본문으로 이동</a><header id="header"></header><section id="sync-status" class="sync-strip" aria-label="기기 연동"><span>PC와 휴대폰에서 같은 기록으로 학습해요.</span><button class="btn secondary" id="connect-cloud">기록 옮겨서 연동하기</button><a class="btn quiet" href="https://jay-united-learning.justdog10.chatgpt.site/united/index.html">연동 화면 열기</a></section><main id="main" tabindex="-1"><p class="loading">경기장을 준비하고 있어요…</p></main><nav id="nav" aria-label="주 메뉴"></nav><div id="notice" role="status" aria-live="polite"></div><dialog id="dialog"></dialog><noscript>이 게임은 JavaScript가 켜진 브라우저에서 실행돼요.</noscript></body></html>
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>JAY UNITED</title><meta name="theme-color" content="#0c2133"><link rel="icon" href="legacy/icon.svg">
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f7f5ef;font:16px/1.6 system-ui,sans-serif;color:#0c2133;padding:20px;box-sizing:border-box}
+main{max-width:420px;text-align:center;background:#fff;border-radius:20px;padding:28px 22px;box-shadow:0 8px 30px #0001}
+a.btn{display:block;margin:12px 0;padding:14px;border-radius:14px;background:#0c2133;color:#fff;text-decoration:none;font-weight:700}a.sub{background:#e8efe9;color:#0c2133}small{color:#667}</style></head>
+<body><main><h1>⚽ JAY UNITED</h1><p id="msg">JAY UNITED가 한 곳으로 합쳐졌어요. 잠시 후 이동해요…</p>
+<a class="btn" id="go" href="https://jay-united-learning.justdog10.chatgpt.site/united/">JAY UNITED 열기</a>
+<a class="btn sub" id="move" href="legacy/index.html" hidden>이 기기 기록 먼저 옮기기</a>
+<small>같은 보호자 ChatGPT 계정으로 로그인하면 PC와 휴대폰 기록이 똑같이 이어져요.</small></main>
+<script>
+const CLOUD='https://jay-united-learning.justdog10.chatgpt.site';const target=CLOUD+'/united/'+location.hash;
+document.getElementById('go').href=target;
+navigator.serviceWorker?.getRegistrations?.().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});
+(async()=>{
+ let local=false;
+ if(localStorage.getItem('jay-cloud-migrated')!==CLOUD){try{local=(await indexedDB.databases()).some(d=>d.name==='jay-united-v1');}catch{local=true;}}
+ if(local){document.getElementById('msg').textContent='이 기기에 아직 옮기지 않은 기록이 있어요. 먼저 옮긴 뒤 이어서 해요.';document.getElementById('move').hidden=false;return;}
+ setTimeout(()=>location.replace(target),900);
+})();
+</script></body></html>

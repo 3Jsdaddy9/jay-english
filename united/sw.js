@@ -1,5 +1,7 @@
-const CACHE='jay-united-20261020-bridge-v1';
-const FILES=['./','index.html','styles.css','app.mjs','catalog.mjs','engine.mjs','store.mjs','cloud-bridge.mjs','ui.mjs','views.mjs','learning.mjs','parent.mjs','questions.json','history-data.json','history-engine.mjs','history-backup.mjs','history-views.mjs','history-parent.mjs','vocabulary-engine.mjs','vocabulary-view.mjs','icon.svg','manifest.json','assets/icon-192.png','assets/icon-512.png','assets/stadium.webp','assets/son.webp','assets/haaland.webp','assets/mbappe.webp'];
-self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES))));
-self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('jay-united-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
-self.addEventListener('fetch',event=>{if(event.request.method!=='GET'||!event.request.url.startsWith(self.registration.scope))return;event.respondWith(fetch(event.request).then(response=>{if(response.ok){const copy=response.clone();event.waitUntil(caches.open(CACHE).then(cache=>cache.put(event.request,copy)));}return response;}).catch(()=>caches.match(event.request)));});
+// JAY UNITED 통합(2026-10-30): 예전 오프라인 캐시를 지우고 스스로 해제해요.
+self.addEventListener('install',()=>self.skipWaiting());
+self.addEventListener('activate',e=>e.waitUntil((async()=>{
+ for(const k of await caches.keys())if(k.startsWith('jay-united'))await caches.delete(k);
+ await self.registration.unregister();
+ for(const c of await self.clients.matchAll({type:'window'}))c.navigate(c.url);
+})()));
